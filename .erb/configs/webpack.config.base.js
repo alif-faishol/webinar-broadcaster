@@ -21,6 +21,10 @@ export default {
           },
         },
       },
+      {
+        test: /\.node$/,
+        loader: 'node-loader',
+      },
     ],
   },
 
@@ -35,7 +39,7 @@ export default {
    */
   resolve: {
     extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'],
-    modules: [path.join(__dirname, '../src'), 'node_modules'],
+    modules: [path.join(__dirname, '../../src'), 'node_modules'],
   },
 
   plugins: [
