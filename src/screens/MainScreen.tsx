@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { PlusIcon } from '@heroicons/react/solid';
 import SceneItemConfigurator from '../components/SceneItemConfigurator';
 import openModal from '../service/modal/renderer';
-import useAppState from '../hooks/useAppService';
+import useAppState from '../hooks/useAppState';
 import AppService from '../service/app/AppService';
 
 const sceneClassName = 'h-8 max-w-[8rem] px-4 truncate font-semibold mr-2 mb-2';

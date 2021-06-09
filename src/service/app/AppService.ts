@@ -63,7 +63,7 @@ class AppService {
     return 0;
   }
 
-  public static init() {
+  static init() {
     const initResult = this.initObs();
     if (initResult !== 0) throw Error('Failed to initialize OBS!');
     this.instance = new AppService();

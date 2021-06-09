@@ -1,7 +1,6 @@
 import React, { forwardRef, HTMLAttributes, Ref } from 'react';
 import { XIcon, SwitchVerticalIcon } from '@heroicons/react/solid';
-import useScenesUtils from '../hooks/useScenesUtils';
-import { SceneItem } from '../utils/ScenesUtils';
+import { SceneItem } from '../service/app/types';
 
 type SceneItemConfiguratorProps<
   P = {
@@ -14,8 +13,6 @@ const SceneItemConfigurator = (
   { sceneItem, onRemove, className }: SceneItemConfiguratorProps,
   ref: Ref<HTMLDivElement>
 ) => {
-  const scenesUtils = useScenesUtils();
-
   return (
     <div
       ref={ref}

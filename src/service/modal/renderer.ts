@@ -1,6 +1,4 @@
 import { ipcRenderer, IpcRendererEvent } from 'electron';
-import { CustomItem } from '../../utils/ScenesUtils';
-import { SerializableSource } from '../osn/source/main';
 
 type OpenModal = {
   (type: 'add-source', args?: undefined): Promise<void>;

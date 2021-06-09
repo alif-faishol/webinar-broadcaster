@@ -9,7 +9,7 @@ import {
 } from './types';
 import { callableFromRenderer } from './utils';
 import SourceService from './SourceService';
-import stateSubject, { setState } from './AppState';
+import { setState, stateSubject } from './AppState';
 
 class SceneService {
   static serializeSceneItem(sceneItem: osn.ISceneItem): SerializableSceneItem {

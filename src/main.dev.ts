@@ -15,8 +15,6 @@ import { app, BrowserWindow, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
-import './service/osn';
-import { shutdown } from './service/osn/general/main';
 import registerModalHandler from './service/modal/main';
 import AppService from './service/app/AppService';
 
@@ -133,7 +131,7 @@ app.on('window-all-closed', () => {
 });
 
 app.on('will-quit', () => {
-  shutdown();
+  AppService.shutdown();
 });
 
 app.whenReady().then(createWindow).catch(console.log);
