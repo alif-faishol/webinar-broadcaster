@@ -1,22 +1,29 @@
 import React from 'react';
-import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import { HashRouter as Router, Switch, Route } from 'react-router-dom';
 import { Windmill } from '@windmill/react-ui';
+import { Provider as JotaiProvider } from 'jotai';
 import './App.global.css';
 import Test from './screens/Test';
-import Main from './screens/Main';
+import MainScreen from './screens/MainScreen';
 import { OSNProvider } from './context/OSNContext';
+import ModalScreen from './screens/ModalScreen';
 
 export default function App() {
   return (
-    <OSNProvider>
+    <JotaiProvider>
       <Windmill>
         <Router>
+          <OSNProvider>
+            <Switch>
+              <Route exact path="/" component={MainScreen} />
+              <Route path="/test" component={Test} />
+            </Switch>
+          </OSNProvider>
           <Switch>
-            <Route path="/" component={Main} />
-            <Route path="/text" component={Test} />
+            <Route path="/modal" component={ModalScreen} />
           </Switch>
         </Router>
       </Windmill>
-    </OSNProvider>
+    </JotaiProvider>
   );
 }

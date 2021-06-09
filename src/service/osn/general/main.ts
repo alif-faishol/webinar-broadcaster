@@ -16,7 +16,7 @@ const RESOURCES_PATH = app.isPackaged
   ? path.join(process.resourcesPath, 'assets')
   : path.join(__dirname, '../../../../assets');
 
-export const initialized = new BehaviorSubject<boolean>(false);
+export const initialized = new BehaviorSubject<boolean>(true);
 
 const init = () => {
   if (!initialized.getValue()) {
@@ -39,6 +39,19 @@ const init = () => {
   }
 
   return 0;
+};
+
+export const shutdown = () => {
+  if (!initialized.getValue()) {
+    return;
+  }
+  try {
+    osn.NodeObs.OBS_service_removeCallback();
+    osn.NodeObs.IPC.disconnect();
+    initialized.next(false);
+  } catch (err) {
+    throw Error(err.message);
+  }
 };
 
 const setCanvasResolution = (
@@ -187,6 +200,7 @@ const getPerformanceStatistics = () => {
 };
 
 ipcMain.handle('osn-general-init', init);
+ipcMain.handle('osn-general-shutdown', shutdown);
 ipcMain.handle('osn-general-set-canvas-resolution', setCanvasResolution);
 ipcMain.handle('osn-general-set-output-resolution', setOutputResolution);
 ipcMain.handle('osn-general-resize-preview', resizePreview);

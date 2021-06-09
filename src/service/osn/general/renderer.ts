@@ -10,6 +10,10 @@ const init = async (): Promise<number> => {
   return ipcRenderer.invoke('osn-general-init');
 };
 
+const shutdown = async (): Promise<void> => {
+  return ipcRenderer.invoke('osn-general-shutdown');
+};
+
 const setCanvasResolution = ({
   width,
   height,
@@ -54,6 +58,7 @@ const setActiveScene = (args: SetActiveSceneArgs): Promise<void> => {
 
 export default {
   init,
+  shutdown,
   setCanvasResolution,
   setOutputResolution,
   resizePreview,

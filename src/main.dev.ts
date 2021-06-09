@@ -11,11 +11,14 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 import path from 'path';
-import { app, BrowserWindow, shell, screen } from 'electron';
+import { app, BrowserWindow, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import './service/osn';
+import { shutdown } from './service/osn/general/main';
+import registerModalHandler from './service/modal/main';
+import AppService from './service/app/AppService';
 
 export default class AppUpdater {
   constructor() {
@@ -70,13 +73,18 @@ const createWindow = async () => {
 
   mainWindow = new BrowserWindow({
     show: false,
-    width: 1024,
-    height: 728,
+    minWidth: 1024,
+    minHeight: 600,
     icon: getAssetPath('icon.png'),
     webPreferences: {
       nodeIntegration: true,
     },
+    useContentSize: true,
   });
+
+  registerModalHandler(mainWindow);
+
+  AppService.init();
 
   mainWindow.loadURL(`file://${__dirname}/index.html`);
 
@@ -122,6 +130,10 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
+});
+
+app.on('will-quit', () => {
+  shutdown();
 });
 
 app.whenReady().then(createWindow).catch(console.log);

@@ -1,16 +1,21 @@
 import React, { forwardRef, HTMLAttributes, Ref } from 'react';
 import { XIcon, SwitchVerticalIcon } from '@heroicons/react/solid';
+import useScenesUtils from '../hooks/useScenesUtils';
+import { SceneItem } from '../utils/ScenesUtils';
 
-type SceneElementProps<
+type SceneItemConfiguratorProps<
   P = {
-    name: string;
+    sceneItem: SceneItem;
+    onRemove: () => void;
   }
 > = Omit<HTMLAttributes<HTMLDivElement>, keyof P> & P;
 
-const SceneElement = (
-  { name, className }: SceneElementProps,
+const SceneItemConfigurator = (
+  { sceneItem, onRemove, className }: SceneItemConfiguratorProps,
   ref: Ref<HTMLDivElement>
 ) => {
+  const scenesUtils = useScenesUtils();
+
   return (
     <div
       ref={ref}
@@ -22,11 +27,15 @@ const SceneElement = (
         </div>
         <h4
           className="flex-1 px-2 py-1 bg-cool-gray-900 text-white font-semibold truncate"
-          title={name}
+          title={sceneItem.name}
         >
-          {name}
+          {sceneItem.name}
         </h4>
-        <button type="button" className="bg-red-800 text-white w-10 px-3">
+        <button
+          type="button"
+          className="bg-red-800 text-white w-10 px-3"
+          onClick={() => onRemove()}
+        >
           <XIcon />
         </button>
       </div>
@@ -35,4 +44,4 @@ const SceneElement = (
   );
 };
 
-export default forwardRef(SceneElement);
+export default forwardRef(SceneItemConfigurator);

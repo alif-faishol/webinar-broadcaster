@@ -15,16 +15,16 @@ const OSNContext = createContext<ContextType | undefined>(undefined);
 
 export const OSNProvider: FC = ({ children }) => {
   const [initState, setInitState] = useState<ContextType['initState']>(
-    'initializing'
+    'initialized'
   );
 
-  useEffect(() => {
-    osn.general
-      .init()
-      .then((res) => setInitState(res === 0 ? 'initialized' : 'error'))
-      .catch(() => setInitState('error'));
-  }, []);
-
+  //   useEffect(() => {
+  //     osn.general
+  //       .init()
+  //       .then((res) => setInitState(res === 0 ? 'initialized' : 'error'))
+  //       .catch(() => setInitState('error'));
+  //   }, []);
+  //
   return (
     <OSNContext.Provider value={{ initState }}>{children}</OSNContext.Provider>
   );

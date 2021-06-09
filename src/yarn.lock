@@ -7,6 +7,6 @@
   resolved "https://registry.yarnpkg.com/@heroicons/react/-/react-1.0.1.tgz#66d25f6441920bd5c2146ea27fd33995885452dd"
   integrity sha512-uikw2gKCmqnvjVxitecWfFLMOKyL9BTFcU4VM3hHj9OMwpkCr5Ke+MRMyY2/aQVmsYs4VTq7NCFX05MYwAHi3g==
 
-"obs-studio-node@https://obsstudionodes3.streamlabs.com/osn-0.14.25-release-win64.tar.gz":
-  version "0.14.25"
-  resolved "https://obsstudionodes3.streamlabs.com/osn-0.14.25-release-win64.tar.gz#20fca504680afbb739896c4178b1590e00a48d9b"
+"obs-studio-node@https://obsstudionodes3.streamlabs.com/osn-0.15.14-release-win64.tar.gz":
+  version "0.15.14"
+  resolved "https://obsstudionodes3.streamlabs.com/osn-0.15.14-release-win64.tar.gz#3338d41cabcef2efa516617df8f4ff234001ff47"

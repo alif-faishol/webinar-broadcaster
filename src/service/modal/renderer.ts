@@ -1,0 +1,21 @@
+import { ipcRenderer, IpcRendererEvent } from 'electron';
+import { CustomItem } from '../../utils/ScenesUtils';
+import { SerializableSource } from '../osn/source/main';
+
+type OpenModal = {
+  (type: 'add-source', args?: undefined): Promise<void>;
+  (type: 'add-scene', args?: undefined): Promise<string | undefined>;
+};
+
+const openModal: OpenModal = (type: any, args: any): Promise<any> =>
+  new Promise((resolve) => {
+    ipcRenderer.once(
+      'modal-close',
+      (_event: IpcRendererEvent, argsFromMain) => {
+        resolve(argsFromMain);
+      }
+    );
+    ipcRenderer.invoke('modal-open', { type, args });
+  });
+
+export default openModal;

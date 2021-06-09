@@ -15,6 +15,6 @@
   },
   "dependencies": {
     "@heroicons/react": "^1.0.1",
-    "obs-studio-node": "https://obsstudionodes3.streamlabs.com/osn-0.14.25-release-win64.tar.gz"
+    "obs-studio-node": "https://obsstudionodes3.streamlabs.com/osn-0.15.14-release-win64.tar.gz"
   }
 }

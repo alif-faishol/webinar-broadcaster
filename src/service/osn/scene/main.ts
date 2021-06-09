@@ -2,8 +2,9 @@ import { ipcMain, IpcMainInvokeEvent } from 'electron';
 import * as osn from 'obs-studio-node';
 import { v4 as uuid } from 'uuid';
 import { initialized } from '../general/main';
+import { SerializableSource, serializeSource } from '../source/main';
 
-type SceneItemTransformValues = {
+export type SceneItemTransformValues = {
   scale: { x: number; y: number };
   position: { x: number; y: number };
   rotation: number;
@@ -12,8 +13,7 @@ type SceneItemTransformValues = {
 
 export type SerializableSceneItem = SceneItemTransformValues & {
   id: number;
-  width: number;
-  height: number;
+  source: SerializableSource;
 };
 
 const serializeSceneItem = (
@@ -21,8 +21,7 @@ const serializeSceneItem = (
 ): SerializableSceneItem => {
   return {
     id: sceneItem.id,
-    width: sceneItem.source.width,
-    height: sceneItem.source.height,
+    source: serializeSource(sceneItem.source),
     scale: sceneItem.scale,
     position: sceneItem.position,
     rotation: sceneItem.rotation,
@@ -62,7 +61,7 @@ export type AddItemArgs = {
 const addItem = (
   _event: IpcMainInvokeEvent,
   { sceneId, sourceId }: AddItemArgs
-) => {
+): SerializableSceneItem => {
   try {
     if (!initialized.getValue()) throw Error('Not initialized!');
 
@@ -71,7 +70,7 @@ const addItem = (
     const source = osn.InputFactory.fromName(sourceId);
     const sceneItem = scene.add(source);
 
-    return sceneItem.id;
+    return serializeSceneItem(sceneItem);
   } catch (err) {
     throw Error(err.message);
   }
@@ -99,6 +98,27 @@ const getItem = (
   }
 };
 
+export type RemoveItemArgs = {
+  sceneId: string;
+  itemId: number;
+};
+
+const removeItem = (
+  _event: IpcMainInvokeEvent,
+  { sceneId, itemId }: GetItemArgs
+) => {
+  try {
+    const scene = osn.SceneFactory.fromName(sceneId);
+    if (!scene) throw Error('Scene not found!');
+    const sceneItem = scene.getItems().find((item) => item.id === itemId);
+    if (!sceneItem) throw Error('Item not found!');
+    sceneItem.source.release();
+    sceneItem.remove();
+  } catch (err) {
+    throw Error(err.message);
+  }
+};
+
 export type TransformItemArgs = {
   sceneId: string;
   itemId: number;
@@ -108,7 +128,7 @@ export type TransformItemArgs = {
 const transformItem = (
   _event: IpcMainInvokeEvent,
   { sceneId, itemId, transformValues }: TransformItemArgs
-) => {
+): SerializableSceneItem => {
   try {
     if (!initialized.getValue()) throw Error('Not initialized!');
 
@@ -119,6 +139,7 @@ const transformItem = (
     if (transformValues.position) sceneItem.position = transformValues.position;
     if (transformValues.rotation) sceneItem.rotation = transformValues.rotation;
     if (transformValues.scale) sceneItem.scale = transformValues.scale;
+    return serializeSceneItem(sceneItem);
   } catch (err) {
     throw Error(err.message);
   }
@@ -128,4 +149,5 @@ ipcMain.handle('osn-scene-create', create);
 ipcMain.handle('osn-scene-remove', remove);
 ipcMain.handle('osn-scene-add-item', addItem);
 ipcMain.handle('osn-scene-get-item', getItem);
+ipcMain.handle('osn-scene-remove-item', removeItem);
 ipcMain.handle('osn-scene-transform-item', transformItem);
