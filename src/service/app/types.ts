@@ -103,4 +103,5 @@ export type Scene = {
 export type AppState = {
   scenes: Scene[];
   activeScene?: Scene;
+  elementRendererPort?: number;
 };

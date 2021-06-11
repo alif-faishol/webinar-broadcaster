@@ -1,13 +1,9 @@
-import { Socket, ManagerOptions, SocketOptions } from 'socket.io-client';
+import io from 'socket.io-client';
 import { AppState } from '../app/types';
-
-declare const io: (
-  opts?: Partial<ManagerOptions & SocketOptions> | undefined
-) => Socket;
 
 const elem = window.document.createElement('div');
 window.document.body.appendChild(elem);
-elem.textContent = 'ehe';
+elem.textContent = 'woiii';
 elem.textContent += typeof io;
 
 const socket = io();

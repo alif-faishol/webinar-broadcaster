@@ -61,6 +61,7 @@ export default merge(baseConfig, {
 
     new webpack.LoaderOptionsPlugin({
       debug: true,
+      exclude: ['@heroicons/react'],
       options: {
         context: path.join(__dirname, '../../src'),
         output: {

@@ -1,8 +1,10 @@
 import { Server } from 'socket.io';
 import express from 'express';
 import http from 'http';
+import { createProxyServer } from 'http-proxy';
 import detect from 'detect-port';
-import { stateSubject } from '../app/AppState';
+import ejs from 'ejs';
+import { setState, stateSubject } from '../app/AppState';
 
 class ElementRendererService {
   private static instance: ElementRendererService;
@@ -13,16 +15,17 @@ class ElementRendererService {
 
   private constructor(public port: number) {
     const app = express();
-    console.log(port);
-    app.set('view engine', 'ejs');
+    app.engine('html', ejs.renderFile);
+    app.use('/dist', express.static(`${__dirname}/dist`));
     app.get('/', (req, res) => {
-      const elementRendererDevPort = process.env.ELEMENT_RENDERER_PORT || 1213;
-      const bundleUrl =
-        process.env.NODE_ENV === 'development'
-          ? `http://localhost:${elementRendererDevPort}/dist/element-renderer.dev.js`
-          : './dist/element-renderer.prod.js';
-
-      res.render(`${__dirname}/index`, { bundleUrl, socketPort: port });
+      if (process.env.NODE_ENV === 'development') {
+        const elementRendererPort = process.env.ELEMENT_RENDERER_PORT || 1213;
+        createProxyServer({
+          target: `http://localhost:${elementRendererPort}/dist/element-renderer.dev.html`,
+        }).web(req, res);
+      } else {
+        res.render(`${__dirname}/dist/element-renderer.prod.html`);
+      }
     });
 
     this.server = http.createServer(app);
@@ -33,6 +36,7 @@ class ElementRendererService {
     });
 
     this.server.listen(port);
+    setState((ps) => ({ ...ps, elementRendererPort: port }));
   }
 
   static getInstance() {

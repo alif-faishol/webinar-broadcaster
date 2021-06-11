@@ -115,6 +115,7 @@ const MainScreen = () => {
                 }}
               />
             ))}
+          <p>PORT: {appState.elementRendererPort}</p>
         </div>
       </div>
     </div>
