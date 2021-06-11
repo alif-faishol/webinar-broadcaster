@@ -15,9 +15,8 @@
   },
   "dependencies": {
     "@heroicons/react": "^1.0.1",
-    "bufferutil": "^4.0.3",
+    "socket.io": "^4.1.2",
     "obs-studio-node": "https://obsstudionodes3.streamlabs.com/osn-0.15.14-release-win64.tar.gz",
-    "socket.io-client": "^4.1.2",
-    "utf-8-validate": "^5.0.5"
+    "socket.io-client": "^4.1.2"
   }
 }
