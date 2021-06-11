@@ -17,6 +17,7 @@ import log from 'electron-log';
 import MenuBuilder from './menu';
 import registerModalHandler from './service/modal/main';
 import AppService from './service/app/AppService';
+import ElementRendererService from './service/element-renderer/ElementRendererService';
 
 export default class AppUpdater {
   constructor() {
@@ -83,6 +84,7 @@ const createWindow = async () => {
   registerModalHandler(mainWindow);
 
   AppService.init();
+  await ElementRendererService.init();
 
   mainWindow.loadURL(`file://${__dirname}/index.html`);
 

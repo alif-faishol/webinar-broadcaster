@@ -1,7 +1,7 @@
 import { ipcRenderer, IpcRendererEvent } from 'electron';
 
 type OpenModal = {
-  (type: 'add-source', args?: undefined): Promise<void>;
+  (type: 'add-item', args?: undefined): Promise<void>;
   (type: 'add-scene', args?: undefined): Promise<string | undefined>;
 };
 

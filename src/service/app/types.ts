@@ -1,5 +1,11 @@
 import * as osn from 'obs-studio-node';
 
+declare module 'obs-studio-node' {
+  interface IProperty {
+    details: any;
+  }
+}
+
 export type SerializableSource = {
   id: osn.IInput['name'];
   settings: osn.IInput['settings'];
@@ -26,7 +32,7 @@ export type SceneItemTransformValues = {
 
 export type SerializableSceneItem = SceneItemTransformValues & {
   id: number;
-  source: SerializableSource;
+  sourceId: string;
 };
 
 type StringVariable = {
@@ -61,17 +67,30 @@ type Variable =
   | NumberVariable
   | BooleanVariable;
 
-export type CustomItem = SceneItemTransformValues & {
-  id: string;
+export type OBSItemTemplate = {
+  type: 'obs-source';
   name: string;
-  type: 'browser-rendered';
-  template: '<div>hehe</div>';
-  variable: { [key: string]: Variable };
+  obsSourceType: string;
 };
 
-type OBSItem = SerializableSceneItem & {
+export type CustomItemTemplate = {
   name: string;
+  type: 'browser-rendered';
+  template: string;
+  container: {
+    configurable: boolean;
+    width: number;
+    height: number;
+  };
+  variables?: { [key: string]: Variable };
 };
+
+export type CustomItem = SceneItemTransformValues &
+  CustomItemTemplate & {
+    id: string;
+  };
+
+export type OBSItem = SerializableSceneItem & OBSItemTemplate;
 
 export type SceneItem = OBSItem | CustomItem;
 

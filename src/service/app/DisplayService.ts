@@ -10,12 +10,14 @@ type Bounds = {
 };
 
 class DisplayService {
+  event?: IpcMainInvokeEvent;
+
   @callableFromRenderer
   async resizePreview(previewId: string, bounds: Bounds) {
-    const event = (this as unknown) as IpcMainInvokeEvent;
+    if (!this.event) throw Error('no event');
     try {
       const dpiAwareBounds = screen.dipToScreenRect(
-        BrowserWindow.fromWebContents(event.sender),
+        BrowserWindow.fromWebContents(this.event.sender),
         bounds
       );
 
@@ -36,9 +38,9 @@ class DisplayService {
 
   @callableFromRenderer
   async attachPreview(previewId: string, bounds: Bounds, sourceId?: string) {
-    const event = (this as unknown) as IpcMainInvokeEvent;
+    if (!this.event) throw Error('no event');
     try {
-      const window = BrowserWindow.fromWebContents(event.sender);
+      const window = BrowserWindow.fromWebContents(this.event.sender);
       if (!window) throw Error('Window not found!');
       if (sourceId) {
         osn.NodeObs.OBS_content_createSourcePreviewDisplay(

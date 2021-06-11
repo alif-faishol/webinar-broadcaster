@@ -1,8 +1,11 @@
 import { v4 as uuid } from 'uuid';
 import * as osn from 'obs-studio-node';
 import { backOff } from 'exponential-backoff';
+import { IpcMainInvokeEvent } from 'electron/main';
 import {
   CustomItem,
+  CustomItemTemplate,
+  OBSItemTemplate,
   SceneItem,
   SceneItemTransformValues,
   SerializableSceneItem,
@@ -11,11 +14,20 @@ import { callableFromRenderer } from './utils';
 import SourceService from './SourceService';
 import { setState, stateSubject } from './AppState';
 
+export const DEFAULT_TRANSFORM_VALUES = {
+  scale: { x: 1, y: 1 },
+  position: { x: 0, y: 0 },
+  rotation: 0,
+  crop: { top: 0, right: 0, bottom: 0, left: 0 },
+} as const;
+
 class SceneService {
+  event?: IpcMainInvokeEvent;
+
   static serializeSceneItem(sceneItem: osn.ISceneItem): SerializableSceneItem {
     return {
       id: sceneItem.id,
-      source: SourceService.serializeSource(sceneItem.source),
+      sourceId: sceneItem.source.name,
       scale: sceneItem.scale,
       position: sceneItem.position,
       rotation: sceneItem.rotation,
@@ -29,9 +41,14 @@ class SceneService {
       const osnScene = osn.SceneFactory.create(uuid());
       const newScene = { id: osnScene.name, items: [], name };
       setState((ps) => {
+        const activeScene = ps.scenes.length === 0 ? newScene : ps.activeScene;
+        if (ps.scenes.length === 0) {
+          osn.Global.setOutputSource(1, osnScene);
+        }
         return {
           ...ps,
           scenes: [...ps.scenes, newScene],
+          activeScene,
         };
       });
       return newScene;
@@ -70,34 +87,55 @@ class SceneService {
   }
 
   @callableFromRenderer
-  async addItem(name: string, item: CustomItem | string, sceneId?: string) {
+  async addItem(
+    template: CustomItemTemplate | OBSItemTemplate,
+    sceneId?: string
+  ) {
     const state = stateSubject.getValue();
     const scene = state.scenes.find(
       ({ id }) => id === (sceneId || state.activeScene?.id)
     );
     if (!scene) throw Error('scene or activeScene not found');
 
-    if (typeof item !== 'string') {
-      // item is CustomItem
-      scene.items = [item, ...scene.items];
-    } else {
-      // item is an OBS SourceType
+    if (template.type === 'browser-rendered') {
+      const newItem = {
+        id: uuid(),
+        scale: { x: 1, y: 1 },
+        position: { x: 0, y: 0 },
+        rotation: 0,
+        crop: { top: 0, right: 0, bottom: 0, left: 0 },
+        ...template,
+      };
+      scene.items = [newItem, ...scene.items];
+    }
+    if (template.type === 'obs-source') {
       try {
-        const osnSource = osn.InputFactory.create(item, uuid());
+        const osnSource = osn.InputFactory.create(
+          template.obsSourceType,
+          uuid()
+        );
         const osnScene = osn.SceneFactory.fromName(scene.id);
         if (!osnScene) throw Error('scene not found in OBS');
-        const sceneItem = await backOff(async () => {
-          const si = osnScene.add(osnSource);
-          if (si.source.width === 0) throw Error('Invalid Source: width = 0');
-          return SceneService.serializeSceneItem(si);
-        });
-        scene.items = [{ ...sceneItem, name }, ...scene.items];
-        await new SceneService().transformItem(scene.id, sceneItem.id, {
-          scale: {
-            x: 1920 / sceneItem.source.width,
-            y: 1080 / sceneItem.source.height,
-          },
-        });
+        const osnSceneItem = osnScene.add(osnSource);
+        try {
+          const source = await backOff(async () => {
+            if (osnSource.width === 0) throw Error('Invalid Source: width = 0');
+            return SourceService.serializeSource(osnSource);
+          });
+          const sceneItem = SceneService.serializeSceneItem(osnSceneItem);
+          scene.items = [{ ...sceneItem, ...template }, ...scene.items];
+          await this.transformItem(scene.id, sceneItem.id, {
+            scale: {
+              x: 1920 / source.width,
+              y: 1080 / source.height,
+            },
+          });
+        } catch (err) {
+          osnSource.release();
+          osnSource.remove();
+          osnSceneItem.remove();
+          throw err;
+        }
       } catch (err) {
         throw Error(err.message);
       }

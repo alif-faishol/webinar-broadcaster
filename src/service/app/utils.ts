@@ -46,7 +46,7 @@ export function callableFromRenderer<
   TFn extends (...args: TArgs) => Promise<TReturn>
 >(
   // eslint-disable-next-line @typescript-eslint/ban-types
-  target: Object,
+  target: { event?: IpcMainInvokeEvent },
   propertyKey: string | symbol,
   descriptor: TypedPropertyDescriptor<TFn>
 ) {
@@ -54,9 +54,11 @@ export function callableFromRenderer<
   if (!fn) throw Error('no method for callableFromRenderer');
 
   const channelId = `${target.constructor.name}-${propertyKey.toString()}`;
+
   if (process.type === 'browser' && electron.ipcMain) {
     electron.ipcMain.handle(channelId, (event: IpcMainInvokeEvent, ...args) => {
-      return fn.apply(event, args as TArgs);
+      if (target) target.event = event;
+      return fn.apply(target, args as TArgs);
     });
     return descriptor;
   }

@@ -1,9 +1,12 @@
+import { IpcMainInvokeEvent } from 'electron/main';
 import * as osn from 'obs-studio-node';
 import { v4 as uuid } from 'uuid';
 import { SerializableSource } from './types';
 import { callableFromRenderer } from './utils';
 
 class SourceService {
+  event?: IpcMainInvokeEvent;
+
   @callableFromRenderer
   async getTypes() {
     try {

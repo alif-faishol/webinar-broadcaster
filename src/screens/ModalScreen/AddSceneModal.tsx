@@ -9,12 +9,16 @@ const AddSceneModal: FC<AddSceneModalProps> = ({ onSubmit }) => {
 
   return (
     <div className="w-full max-w-xs p-4">
-      <input
-        type="text"
-        value={value}
-        className="w-full"
-        onChange={({ target: { value: newValue } }) => setValue(newValue)}
-      />
+      <label htmlFor="name">
+        Name
+        <input
+          id="name"
+          type="text"
+          value={value}
+          className="w-full"
+          onChange={({ target: { value: newValue } }) => setValue(newValue)}
+        />
+      </label>
       <button
         type="button"
         className="h-8 w-full mt-4 bg-cool-gray-900 text-white text-sm font-semibold"

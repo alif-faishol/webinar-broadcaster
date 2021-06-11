@@ -9,11 +9,12 @@ const sceneClassName = 'h-8 max-w-[8rem] px-4 truncate font-semibold mr-2 mb-2';
 const activeSceneClassName = `${sceneClassName} bg-cool-gray-900 text-white`;
 const inactiveSceneClassName = `${sceneClassName} border border-cool-gray-900`;
 
+const appService = AppService.getInstance();
+
 const MainScreen = () => {
   const previewRef = useRef<HTMLDivElement>(null);
   const previewInitializedRef = useRef<boolean>(false);
   const appState = useAppState();
-  const appService = AppService.getInstance();
 
   useEffect(() => {
     if (!previewRef.current || previewInitializedRef.current) return;
@@ -33,7 +34,7 @@ const MainScreen = () => {
       .catch(() => {
         previewInitializedRef.current = false;
       });
-  }, [appService]);
+  }, []);
 
   return (
     <div className="p-4 min-h-screen flex h-full">
@@ -93,7 +94,7 @@ const MainScreen = () => {
                 type="button"
                 onClick={() => {
                   if (!appState.activeScene) return;
-                  openModal('add-source');
+                  openModal('add-item');
                 }}
               >
                 <PlusIcon className="w-5 h-5" />

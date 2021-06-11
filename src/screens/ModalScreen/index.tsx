@@ -3,7 +3,7 @@ import { ipcRenderer, IpcRendererEvent } from 'electron';
 import React, { FC, Fragment, useEffect, useState } from 'react';
 import { XIcon } from '@heroicons/react/solid';
 import AddSceneModal from './AddSceneModal';
-import AddSourceModal from './AddSourceModal';
+import AddItemModal from './AddItemModal';
 
 const ModalScreen: FC = () => {
   const [modalState, setModalState] = useState<{
@@ -75,13 +75,12 @@ const ModalScreen: FC = () => {
                   }}
                 />
               )}
-              {modalState.type === 'add-source' && (
-                <AddSourceModal
-                  onSubmit={(argsResponse) => {
+              {modalState.type === 'add-item' && (
+                <AddItemModal
+                  onSubmit={() => {
                     setModalState((ps) => ({
                       ...ps,
                       open: false,
-                      argsResponse,
                     }));
                   }}
                 />

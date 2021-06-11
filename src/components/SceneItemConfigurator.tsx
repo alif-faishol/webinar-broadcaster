@@ -1,6 +1,13 @@
-import React, { forwardRef, HTMLAttributes, Ref } from 'react';
+import React, {
+  forwardRef,
+  HTMLAttributes,
+  Ref,
+  useEffect,
+  useState,
+} from 'react';
 import { XIcon, SwitchVerticalIcon } from '@heroicons/react/solid';
-import { SceneItem } from '../service/app/types';
+import { SceneItem, SerializableSource } from '../service/app/types';
+import AppService from '../service/app/AppService';
 
 type SceneItemConfiguratorProps<
   P = {
@@ -9,10 +16,24 @@ type SceneItemConfiguratorProps<
   }
 > = Omit<HTMLAttributes<HTMLDivElement>, keyof P> & P;
 
+const appService = AppService.getInstance();
+
 const SceneItemConfigurator = (
   { sceneItem, onRemove, className }: SceneItemConfiguratorProps,
   ref: Ref<HTMLDivElement>
 ) => {
+  const [obsSource, setObsSource] = useState<SerializableSource>();
+
+  useEffect(() => {
+    if (sceneItem.type !== 'obs-source') return;
+    appService.source
+      .get(sceneItem.sourceId)
+      .then(setObsSource)
+      .catch((err) => {
+        throw err;
+      });
+  }, [sceneItem]);
+
   return (
     <div
       ref={ref}
@@ -36,7 +57,23 @@ const SceneItemConfigurator = (
           <XIcon />
         </button>
       </div>
-      <div className="px-2 py-1">hehe</div>
+      <div className="px-2 py-1">
+        {obsSource && 'url' in obsSource.settings && (
+          <label htmlFor="url">
+            URL
+            <input
+              type="text"
+              name="url"
+              defaultValue={obsSource.settings.url}
+              onChange={({ target: { value } }) => {
+                appService.source.setSettings(obsSource.id, {
+                  url: value,
+                });
+              }}
+            />
+          </label>
+        )}
+      </div>
     </div>
   );
 };
