@@ -25,13 +25,11 @@ const registerModalHandler = (parentWindow: BrowserWindow) => {
   });
 
   parentWindow.on('move', () => {
-    const { x, y } = parentWindow.getContentBounds();
-    modalWindow.setPosition(x, y);
+    modalWindow.setBounds(parentWindow.getContentBounds());
   });
 
   parentWindow.on('resize', () => {
-    const { width, height } = parentWindow.getContentBounds();
-    modalWindow.setSize(width, height);
+    modalWindow.setBounds(parentWindow.getContentBounds());
   });
 };
 

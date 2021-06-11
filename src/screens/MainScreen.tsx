@@ -17,15 +17,31 @@ const MainScreen = () => {
   const appState = useAppState();
 
   useEffect(() => {
-    if (!previewRef.current || previewInitializedRef.current) return;
+    if (!previewRef.current || previewInitializedRef.current) return undefined;
     const previewId = 'output-preview';
     const { width, height, x, y } = previewRef.current.getBoundingClientRect();
+
+    const onDevicePixelRatioChanged = () => {
+      if (!previewInitializedRef.current) return;
+      appService.display.resizePreview(previewId, {
+        width: width * window.devicePixelRatio,
+        height: height * window.devicePixelRatio,
+        x: x * window.devicePixelRatio,
+        y: (y + 20) * window.devicePixelRatio,
+      });
+    };
+
+    const mediaQueryList = matchMedia(
+      `(resolution: ${window.devicePixelRatio}dppx)`
+    );
+    mediaQueryList.addEventListener('change', onDevicePixelRatioChanged);
+
     appService.display
       .attachPreview(previewId, {
-        width,
-        height,
-        x,
-        y: y + 20,
+        width: width * window.devicePixelRatio,
+        height: height * window.devicePixelRatio,
+        x: x * window.devicePixelRatio,
+        y: (y + 20) * window.devicePixelRatio,
       })
       .then(() => {
         previewInitializedRef.current = true;
@@ -34,6 +50,10 @@ const MainScreen = () => {
       .catch(() => {
         previewInitializedRef.current = false;
       });
+
+    return () => {
+      mediaQueryList.removeEventListener('change', onDevicePixelRatioChanged);
+    };
   }, []);
 
   return (

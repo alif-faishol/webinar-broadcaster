@@ -1,4 +1,4 @@
-import { BrowserWindow, IpcMainInvokeEvent, screen } from 'electron';
+import { BrowserWindow, IpcMainInvokeEvent } from 'electron';
 import * as osn from 'obs-studio-node';
 import { callableFromRenderer } from './utils';
 
@@ -16,21 +16,15 @@ class DisplayService {
   async resizePreview(previewId: string, bounds: Bounds) {
     if (!this.event) throw Error('no event');
     try {
-      const dpiAwareBounds = screen.dipToScreenRect(
-        BrowserWindow.fromWebContents(this.event.sender),
-        bounds
-      );
+      const window = BrowserWindow.fromWebContents(this.event.sender);
+      if (!window) throw Error('no window');
 
-      const displayWidth = Math.floor(dpiAwareBounds.width);
-      const displayHeight = Math.floor(dpiAwareBounds.height);
-      const displayX = Math.floor(dpiAwareBounds.x);
-      const displayY = Math.floor(dpiAwareBounds.y);
       osn.NodeObs.OBS_content_resizeDisplay(
         previewId,
-        displayWidth,
-        displayHeight
+        bounds.width,
+        bounds.height
       );
-      osn.NodeObs.OBS_content_moveDisplay(previewId, displayX, displayY);
+      osn.NodeObs.OBS_content_moveDisplay(previewId, bounds.x, bounds.y);
     } catch (err) {
       throw Error(err.message);
     }
@@ -57,7 +51,7 @@ class DisplayService {
       }
       osn.NodeObs.OBS_content_setShouldDrawUI(previewId, false);
       osn.NodeObs.OBS_content_setPaddingSize(previewId, 0);
-      new DisplayService().resizePreview.bind(this)(previewId, bounds);
+      this.resizePreview.bind(this)(previewId, bounds);
     } catch (err) {
       throw Error(err.message);
     }

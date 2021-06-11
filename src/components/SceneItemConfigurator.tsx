@@ -6,6 +6,7 @@ import React, {
   useState,
 } from 'react';
 import { XIcon, SwitchVerticalIcon } from '@heroicons/react/solid';
+import { EPropertyType } from 'obs-studio-node';
 import { SceneItem, SerializableSource } from '../service/app/types';
 import AppService from '../service/app/AppService';
 
@@ -73,6 +74,31 @@ const SceneItemConfigurator = (
             />
           </label>
         )}
+        {obsSource?.properties.map((item) => {
+          if (item.type === EPropertyType.List)
+            return (
+              <label>
+                {item.description}
+                <select
+                  onChange={({ target: { value } }) => {
+                    if (item.details.format === 1) {
+                      appService.source.setSettings(obsSource.id, {
+                        [item.name]: parseInt(value, 10),
+                      });
+                    }
+                  }}
+                >
+                  {Array.isArray(item.details?.items) &&
+                    item.details.items.map((opt) => (
+                      <option value={opt.value} key={opt.value}>
+                        {opt.name}
+                      </option>
+                    ))}
+                </select>
+              </label>
+            );
+          return undefined;
+        })}
       </div>
     </div>
   );
