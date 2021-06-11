@@ -1,5 +1,4 @@
 import path from 'path';
-import HtmlWebpackPlugin from 'html-webpack-plugin';
 import fs from 'fs';
 import webpack from 'webpack';
 import chalk from 'chalk';
@@ -7,7 +6,6 @@ import { merge } from 'webpack-merge';
 import { spawn, execSync } from 'child_process';
 import baseConfig from './webpack.config.base';
 import CheckNodeEnv from '../scripts/CheckNodeEnv';
-import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 
 // When an ESLint server is running, we can't set the NODE_ENV so we'll check if it's
 // at the dev webpack config is not accidentally run in a production environment
@@ -71,9 +69,7 @@ export default merge(baseConfig, {
 
     new webpack.LoaderOptionsPlugin({
       debug: true,
-    }),
-
-    new HtmlWebpackPlugin(),
+    })
   ],
 
   node: {

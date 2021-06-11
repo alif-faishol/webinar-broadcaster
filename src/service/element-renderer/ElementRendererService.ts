@@ -1,4 +1,4 @@
-import io from 'socket.io';
+import { Server } from 'socket.io';
 import express from 'express';
 import http from 'http';
 import detect from 'detect-port';
@@ -7,7 +7,7 @@ import { stateSubject } from '../app/AppState';
 class ElementRendererService {
   private static instance: ElementRendererService;
 
-  private io: io.Server;
+  private io: Server;
 
   private server: http.Server;
 
@@ -27,7 +27,7 @@ class ElementRendererService {
 
     this.server = http.createServer(app);
 
-    this.io = new io.Server(this.server);
+    this.io = new Server(this.server);
     stateSubject.subscribe((state) => {
       this.io.emit('item-changed', state);
     });
