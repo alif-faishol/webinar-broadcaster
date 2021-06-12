@@ -19,6 +19,7 @@ const Item = ({ item }: { item: CustomItem }) => {
         position: 'absolute',
       }}
     >
+      {item.css && <link rel="stylesheet" href={item.css} />}
       <JsxParser
         jsx={item.template}
         disableKeyGeneration
@@ -43,7 +44,7 @@ const App = () => {
     socket.on('items-updated', (newState: typeof itemsGroups) => {
       setItemsGroups(newState);
     });
-  });
+  }, []);
 
   const layer = useMemo(() => {
     const layerParam = new URLSearchParams(window.location.search).get('layer');
@@ -56,7 +57,7 @@ const App = () => {
     return (
       <div
         style={{
-          background: 'red',
+          background: 'rgba(255, 0, 0, 0.5)',
           width: 1920,
           height: 1080,
           display: 'flex',

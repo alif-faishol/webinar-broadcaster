@@ -1,12 +1,13 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import AppService from '../../services/app/AppService';
 import { CustomItemTemplate, OBSItemTemplate } from '../../services/app/types';
+import ElementService from '../../services/element/ElementService';
 
 type AddSourceModalProps = {
   onSubmit: () => void;
 };
 
-const ITEM_TEMPLATES: Array<CustomItemTemplate | OBSItemTemplate> = [
+const OBS_TEMPLATES: Array<CustomItemTemplate | OBSItemTemplate> = [
   {
     type: 'obs-source',
     obsSourceType: 'monitor_capture',
@@ -22,43 +23,25 @@ const ITEM_TEMPLATES: Array<CustomItemTemplate | OBSItemTemplate> = [
     obsSourceType: 'dshow_input',
     name: 'Webcam',
   },
-  {
-    type: 'browser-rendered',
-    name: 'Running Text',
-    template: `<div style={{background: 'red'}}>
-    <p>
-    Text: {text}
-    </p>
-
-    only when show true:
-    <div style={{opacity: show ? 1 : 0, transition: 'all 2s'}}>
-    muncul
-    </div>
-    </div>`,
-    container: {
-      configurable: true,
-      width: 1920,
-      height: 300,
-    },
-    variables: {
-      text: {
-        type: 'string',
-        value: '',
-      },
-      show: {
-        type: 'boolean',
-        value: true,
-      },
-    },
-  },
 ];
 
 const appService = AppService.getInstance();
 
 const AddSourceModal: FC<AddSourceModalProps> = ({ onSubmit }) => {
+  const [templates, setTemplates] =
+    useState<Array<CustomItemTemplate | OBSItemTemplate>>(OBS_TEMPLATES);
   const [selectedTemplateIdx, setSelectedTemplateIdx] = useState<number>(0);
   const [name, setName] = useState('');
-  const selectedTemplate = ITEM_TEMPLATES[selectedTemplateIdx];
+  const selectedTemplate = templates[selectedTemplateIdx];
+
+  useEffect(() => {
+    ElementService.getInstance()
+      .loadTemplates()
+      .then((customTemplates) =>
+        setTemplates((ps) => [...ps, ...customTemplates])
+      )
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="w-full max-w-lg p-4">
@@ -72,7 +55,7 @@ const AddSourceModal: FC<AddSourceModalProps> = ({ onSubmit }) => {
             setSelectedTemplateIdx(parseInt(value, 10) || 0);
           }}
         >
-          {ITEM_TEMPLATES.map((template, idx) => (
+          {templates.map((template, idx) => (
             // eslint-disable-next-line react/no-array-index-key
             <option key={idx} value={idx}>
               {template.name}

@@ -52,7 +52,7 @@ type NumberVariable = {
   type: 'number';
   min?: number;
   max?: number;
-  control: 'text-input' | 'slider';
+  control: 'text-input' | 'slider' | 'step';
   value: number;
 };
 
@@ -61,11 +61,17 @@ type BooleanVariable = {
   value: boolean;
 };
 
+type ColorVariable = {
+  type: 'color';
+  value: string;
+};
+
 type Variable =
   | StringVariable
   | EnumVariable
   | NumberVariable
-  | BooleanVariable;
+  | BooleanVariable
+  | ColorVariable;
 
 export type OBSItemTemplate = {
   type: 'obs-source';
@@ -75,7 +81,11 @@ export type OBSItemTemplate = {
 
 export type CustomItemTemplate = {
   name: string;
+  author: string;
+  version: string;
   type: 'browser-rendered';
+  thumbnail?: string;
+  css?: string;
   template: string;
   container: {
     configurable: boolean;

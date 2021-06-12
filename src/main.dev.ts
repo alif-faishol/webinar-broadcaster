@@ -21,6 +21,7 @@ import MenuBuilder from './menu';
 import registerModalHandler from './services/modal/main';
 import AppService from './services/app/AppService';
 import ElementRendererService from './services/element-renderer/ElementRendererService';
+import ElementService from './services/element/ElementService';
 
 export default class AppUpdater {
   constructor() {
@@ -78,6 +79,7 @@ const createWindow = async () => {
 
   AppService.init();
   await ElementRendererService.init();
+  await ElementService.getInstance();
 
   mainWindow.loadURL(`file://${__dirname}/index.html`);
 

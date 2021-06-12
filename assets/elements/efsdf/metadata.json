@@ -1,0 +1,28 @@
+{
+  "name": "Simple Lower-third",
+  "author": "Alif Faishol",
+  "version": "0.1.0",
+  "container": {
+    "configurable": false,
+    "width": 1920,
+    "height": 1920
+  },
+  "variables": {
+    "title": {
+      "type": "string",
+      "value": ""
+    },
+    "subtitle": {
+      "type": "string",
+      "value": ""
+    },
+    "color": {
+      "type": "color",
+      "value": "red"
+    },
+    "show": {
+      "type": "boolean",
+      "value": true
+    }
+  }
+}

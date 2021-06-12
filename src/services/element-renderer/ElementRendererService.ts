@@ -4,6 +4,8 @@ import http from 'http';
 import { createProxyServer } from 'http-proxy';
 import detect from 'detect-port';
 import ejs from 'ejs';
+import electron from 'electron';
+import path from 'path';
 import { setState, stateSubject } from '../app/AppState';
 import { AppState, CustomItem } from '../app/types';
 
@@ -20,6 +22,10 @@ class ElementRendererService {
       this.io.emit('items-updated', itemsGroups);
       return;
     }
+    /**
+     * Groups items when there's OBS Source in between items so OBS Source can
+     * be displayed in proper layer
+     */
     activeScene.items.forEach((item) => {
       if (item.type !== 'browser-rendered') {
         if (itemsGroups[itemsGroups.length - 1].length > 0)
@@ -33,8 +39,12 @@ class ElementRendererService {
 
   private constructor(public port: number) {
     const app = express();
+    const RESOURCES_PATH = electron.app.isPackaged
+      ? path.join(process.resourcesPath, 'assets')
+      : path.join(__dirname, '../../../assets');
     app.engine('html', ejs.renderFile);
     app.use('/dist', express.static(`${__dirname}/dist`));
+    app.use('/assets', express.static(RESOURCES_PATH));
     app.get('/', (req, res) => {
       if (process.env.NODE_ENV === 'development') {
         const elementRendererPort = process.env.ELEMENT_RENDERER_PORT || 1213;
