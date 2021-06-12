@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import { PlusIcon } from '@heroicons/react/solid';
 import SceneItemConfigurator from '../components/SceneItemConfigurator';
-import openModal from '../service/modal/renderer';
+import openModal from '../services/modal/renderer';
 import useAppState from '../hooks/useAppState';
-import AppService from '../service/app/AppService';
+import AppService from '../services/app/AppService';
 
 const sceneClassName = 'h-8 max-w-[8rem] px-4 truncate font-semibold mr-2 mb-2';
 const activeSceneClassName = `${sceneClassName} bg-cool-gray-900 text-white`;
@@ -131,7 +131,7 @@ const MainScreen = () => {
                 className="mb-2"
                 onRemove={() => {
                   if (!appState.activeScene) return;
-                  appService.scene.removeItem(appState.activeScene.id, item.id);
+                  appService.scene.removeItem(item.id, appState.activeScene.id);
                 }}
               />
             ))}

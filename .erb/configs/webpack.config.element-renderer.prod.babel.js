@@ -31,7 +31,7 @@ export default merge(baseConfig, {
   entry: [
     'core-js',
     'regenerator-runtime/runtime',
-    path.join(__dirname, '../../src/service/element-renderer/index.tsx'),
+    path.join(__dirname, '../../src/services/element-renderer/index.tsx'),
   ],
 
   output: {
@@ -39,6 +39,25 @@ export default merge(baseConfig, {
     publicPath: './dist/',
     filename: 'element-renderer.prod.js',
     libraryTarget: 'umd',
+  },
+
+  module: {
+    rules: [
+      {
+        test: /.s?css$/,
+        use: [
+          {
+            loader: MiniCssExtractPlugin.loader,
+            options: {
+              // `./dist` can't be inerhited for publicPath for styles. Otherwise generated paths will be ./dist/dist
+              publicPath: './',
+            },
+          },
+          'css-loader',
+          'postcss-loader'
+        ],
+      },
+    ]
   },
 
   optimization: {
@@ -66,12 +85,16 @@ export default merge(baseConfig, {
       DEBUG_PROD: false,
     }),
 
+    new MiniCssExtractPlugin({
+      filename: 'style.css',
+    }),
+
+    new HtmlWebpackPlugin({filename: 'element-renderer.prod.html'}),
+
     new BundleAnalyzerPlugin({
       analyzerMode:
         process.env.OPEN_ANALYZER === 'true' ? 'server' : 'disabled',
       openAnalyzer: process.env.OPEN_ANALYZER === 'true',
     }),
-
-    new HtmlWebpackPlugin({filename: 'element-renderer.prod.html'}),
   ],
 });

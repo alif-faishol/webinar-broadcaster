@@ -27,7 +27,7 @@ export default merge(baseConfig, {
   entry: [
     'core-js',
     'regenerator-runtime/runtime',
-    require.resolve('../../src/service/element-renderer/index.tsx'),
+    require.resolve('../../src/services/element-renderer/index.tsx'),
   ],
 
   output: {
@@ -46,6 +46,10 @@ export default merge(baseConfig, {
             loader: require.resolve('babel-loader'),
           },
         ],
+      },
+      {
+        test: /\.css$/i,
+        use: ["style-loader", "css-loader", "postcss-loader"],
       },
     ],
   },

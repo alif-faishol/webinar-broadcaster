@@ -1,11 +1,6 @@
 import React, { FC, useState } from 'react';
-import { v4 as uuid } from 'uuid';
-import AppService from '../../service/app/AppService';
-import {
-  CustomItem,
-  CustomItemTemplate,
-  OBSItemTemplate,
-} from '../../service/app/types';
+import AppService from '../../services/app/AppService';
+import { CustomItemTemplate, OBSItemTemplate } from '../../services/app/types';
 
 type AddSourceModalProps = {
   onSubmit: () => void;
@@ -30,13 +25,13 @@ const ITEM_TEMPLATES: Array<CustomItemTemplate | OBSItemTemplate> = [
   {
     type: 'browser-rendered',
     name: 'Running Text',
-    template: `<div>
+    template: `<div style={{background: 'red'}}>
     <p>
     Text: {text}
     </p>
 
     only when show true:
-    <div class={{show: show}}>
+    <div style={{opacity: show ? 1 : 0, transition: 'all 2s'}}>
     muncul
     </div>
     </div>`,

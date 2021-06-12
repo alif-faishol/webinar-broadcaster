@@ -2,6 +2,7 @@ import { v4 as uuid } from 'uuid';
 import * as osn from 'obs-studio-node';
 import { backOff } from 'exponential-backoff';
 import { IpcMainInvokeEvent } from 'electron/main';
+import { Variables } from 'electron-log';
 import {
   CustomItem,
   CustomItemTemplate,
@@ -39,7 +40,11 @@ class SceneService {
   async add(name: string) {
     try {
       const osnScene = osn.SceneFactory.create(uuid());
-      const newScene = { id: osnScene.name, items: [], name };
+      const newScene = {
+        id: osnScene.name,
+        items: [],
+        name,
+      };
       setState((ps) => {
         const activeScene = ps.scenes.length === 0 ? newScene : ps.activeScene;
         if (ps.scenes.length === 0) {
@@ -144,7 +149,26 @@ class SceneService {
   }
 
   @callableFromRenderer
-  async removeItem(sceneId: string, itemId: number | string) {
+  async setCustomItemVariables(
+    itemId: string,
+    variables: Variables,
+    sceneId?: string
+  ) {
+    const state = stateSubject.getValue();
+    const scene = state.scenes.find(
+      ({ id }) => id === (sceneId || state.activeScene?.id)
+    );
+    if (!scene) throw Error('scene or activeScene not found');
+    const sceneItem = scene.items.find(
+      (item) => item.type === 'browser-rendered' && item.id === itemId
+    ) as CustomItem;
+    if (!sceneItem) throw Error('Scene item not found!');
+    sceneItem.variables = variables;
+    setState(state);
+  }
+
+  @callableFromRenderer
+  async removeItem(itemId: number | string, sceneId?: string) {
     const state = stateSubject.getValue();
     const scene = state.scenes.find(({ id }) => id === sceneId);
     if (!scene) throw Error('Scene not found!');

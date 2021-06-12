@@ -1,6 +1,6 @@
 import { ipcRenderer, IpcRendererEvent } from 'electron';
 import { useEffect, useState } from 'react';
-import { AppState } from '../service/app/types';
+import { AppState } from '../services/app/types';
 
 const useAppState = (): AppState => {
   const [state, setState] = useState<AppState>({ scenes: [] });

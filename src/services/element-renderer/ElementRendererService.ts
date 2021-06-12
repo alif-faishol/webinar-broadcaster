@@ -5,6 +5,7 @@ import { createProxyServer } from 'http-proxy';
 import detect from 'detect-port';
 import ejs from 'ejs';
 import { setState, stateSubject } from '../app/AppState';
+import { AppState, CustomItem } from '../app/types';
 
 class ElementRendererService {
   private static instance: ElementRendererService;
@@ -12,6 +13,23 @@ class ElementRendererService {
   private io: Server;
 
   private server: http.Server;
+
+  private handleStateChange({ activeScene }: AppState) {
+    const itemsGroups: CustomItem[][] = [[]];
+    if (!activeScene) {
+      this.io.emit('items-updated', itemsGroups);
+      return;
+    }
+    activeScene.items.forEach((item) => {
+      if (item.type !== 'browser-rendered') {
+        if (itemsGroups[itemsGroups.length - 1].length > 0)
+          itemsGroups.push([]);
+        return;
+      }
+      itemsGroups[itemsGroups.length - 1].push(item);
+    });
+    this.io.emit('items-updated', itemsGroups);
+  }
 
   private constructor(public port: number) {
     const app = express();
@@ -31,8 +49,11 @@ class ElementRendererService {
     this.server = http.createServer(app);
 
     this.io = new Server(this.server);
-    stateSubject.subscribe((state) => {
-      this.io.emit('item-changed', state);
+    stateSubject.subscribe((state) => this.handleStateChange(state));
+
+    // send current state when element renderer connected
+    this.io.on('connect', () => {
+      this.handleStateChange(stateSubject.getValue());
     });
 
     this.server.listen(port);

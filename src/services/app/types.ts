@@ -94,6 +94,11 @@ export type OBSItem = SerializableSceneItem & OBSItemTemplate;
 
 export type SceneItem = OBSItem | CustomItem;
 
+export type ElementRendererInstance = {
+  id: string;
+  elements: CustomItem;
+};
+
 export type Scene = {
   id: string;
   name: string;

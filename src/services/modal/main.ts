@@ -6,6 +6,7 @@ const registerModalHandler = (parentWindow: BrowserWindow) => {
     parent: parentWindow,
     webPreferences: {
       nodeIntegration: true,
+      contextIsolation: false,
     },
     frame: false,
     resizable: false,

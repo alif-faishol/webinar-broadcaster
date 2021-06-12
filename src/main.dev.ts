@@ -14,10 +14,13 @@ import path from 'path';
 import { app, BrowserWindow, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
+import installExtensions, {
+  REACT_DEVELOPER_TOOLS,
+} from 'electron-devtools-installer';
 import MenuBuilder from './menu';
-import registerModalHandler from './service/modal/main';
-import AppService from './service/app/AppService';
-import ElementRendererService from './service/element-renderer/ElementRendererService';
+import registerModalHandler from './services/modal/main';
+import AppService from './services/app/AppService';
+import ElementRendererService from './services/element-renderer/ElementRendererService';
 
 export default class AppUpdater {
   constructor() {
@@ -41,25 +44,14 @@ if (
   require('electron-debug')();
 }
 
-const installExtensions = async () => {
-  const installer = require('electron-devtools-installer');
-  const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
-  const extensions = ['REACT_DEVELOPER_TOOLS'];
-
-  return installer
-    .default(
-      extensions.map((name) => installer[name]),
-      forceDownload
-    )
-    .catch(console.log);
-};
-
 const createWindow = async () => {
   if (
     process.env.NODE_ENV === 'development' ||
     process.env.DEBUG_PROD === 'true'
   ) {
-    await installExtensions();
+    await installExtensions([REACT_DEVELOPER_TOOLS], {
+      forceDownload: true,
+    }).catch((err) => console.log(err));
   }
 
   const RESOURCES_PATH = app.isPackaged
@@ -77,6 +69,7 @@ const createWindow = async () => {
     icon: getAssetPath('icon.png'),
     webPreferences: {
       nodeIntegration: true,
+      contextIsolation: false,
     },
     useContentSize: true,
   });

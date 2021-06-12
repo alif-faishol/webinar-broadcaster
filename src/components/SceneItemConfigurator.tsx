@@ -6,9 +6,8 @@ import React, {
   useState,
 } from 'react';
 import { XIcon, SwitchVerticalIcon } from '@heroicons/react/solid';
-import { EPropertyType } from 'obs-studio-node';
-import { SceneItem, SerializableSource } from '../service/app/types';
-import AppService from '../service/app/AppService';
+import { SceneItem, SerializableSource } from '../services/app/types';
+import AppService from '../services/app/AppService';
 
 type SceneItemConfiguratorProps<
   P = {
@@ -59,6 +58,46 @@ const SceneItemConfigurator = (
         </button>
       </div>
       <div className="px-2 py-1">
+        {sceneItem.type === 'browser-rendered' &&
+          sceneItem.variables &&
+          Object.entries(sceneItem.variables).map(([name, def]) => (
+            <>
+              {def.type === 'string' && (
+                <label>
+                  {name}
+                  <input
+                    type="text"
+                    defaultValue={def.value}
+                    onChange={({ target: { value } }) => {
+                      if (!sceneItem.variables) return;
+                      sceneItem.variables[name].value = value;
+                      appService.scene.setCustomItemVariables(
+                        sceneItem.id,
+                        sceneItem.variables
+                      );
+                    }}
+                  />
+                </label>
+              )}
+              {def.type === 'boolean' && (
+                <label>
+                  {name}
+                  <input
+                    type="checkbox"
+                    defaultChecked={!!def.value}
+                    onChange={({ target: { checked } }) => {
+                      if (!sceneItem.variables) return;
+                      sceneItem.variables[name].value = checked;
+                      appService.scene.setCustomItemVariables(
+                        sceneItem.id,
+                        sceneItem.variables
+                      );
+                    }}
+                  />
+                </label>
+              )}
+            </>
+          ))}
         {obsSource && 'url' in obsSource.settings && (
           <label htmlFor="url">
             URL
@@ -75,7 +114,7 @@ const SceneItemConfigurator = (
           </label>
         )}
         {obsSource?.properties.map((item) => {
-          if (item.type === EPropertyType.List)
+          if (item.type === 6)
             return (
               <label>
                 {item.description}
