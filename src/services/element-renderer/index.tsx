@@ -54,29 +54,30 @@ const App = () => {
   }, []);
 
   if (layer === undefined || Number.isNaN(layer) || !itemsGroups[layer]) {
-    return (
-      <div
-        style={{
-          background: 'rgba(255, 0, 0, 0.5)',
-          width: 1920,
-          height: 1080,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
-        <h1
-          style={{
-            color: 'white',
-            padding: 48,
-            fontSize: 64,
-            textAlign: 'center',
-          }}
-        >
-          Layer not found!
-        </h1>
-      </div>
-    );
+    return null;
+    // return (
+    //   <div
+    //     style={{
+    //       background: 'rgba(255, 0, 0, 0.5)',
+    //       width: 1920,
+    //       height: 1080,
+    //       display: 'flex',
+    //       justifyContent: 'center',
+    //       alignItems: 'center',
+    //     }}
+    //   >
+    //     <h1
+    //       style={{
+    //         color: 'white',
+    //         padding: 48,
+    //         fontSize: 64,
+    //         textAlign: 'center',
+    //       }}
+    //     >
+    //       Layer not found!
+    //     </h1>
+    //   </div>
+    // );
   }
 
   return (

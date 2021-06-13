@@ -2,15 +2,15 @@ import { Server } from 'socket.io';
 import express from 'express';
 import http from 'http';
 import { createProxyServer } from 'http-proxy';
-import { v4 as uuid } from 'uuid';
 import detectPort from 'detect-port';
 import ejs from 'ejs';
 import electron from 'electron';
 import path from 'path';
 import * as osn from 'obs-studio-node';
 import { setState, stateSubject } from '../app/AppState';
-import { AppState, CustomItem, OBSItem, SceneItem } from '../app/types';
-import SourceService from '../app/SourceService';
+import { AppState, CustomItem, SceneItem } from '../app/types';
+
+const REMOVE_UNUSED_RENDERER_ON_CHANGE = false;
 
 class ElementRendererService {
   private static instance: ElementRendererService;
@@ -43,7 +43,7 @@ class ElementRendererService {
   /**
    * Remove unused renderer based on itemsGroups requirement
    */
-  removeUnusedRenderer(itemsGroups: CustomItem[][]) {
+  private removeUnusedRenderer(itemsGroups: CustomItem[][]) {
     if (this.renderers.length > itemsGroups.length)
       this.renderers
         .slice(-(this.renderers.length - itemsGroups.length))
@@ -111,12 +111,15 @@ class ElementRendererService {
       prevItem = item;
     });
 
-    /**
-     * It is faster to use unused renderer instead of
-     * creating new renderer when additional renderer is needed.
-     * So we're commenting this for now.
-     */
-    // this.removeUnusedRenderer(itemsGroups)
+    if (REMOVE_UNUSED_RENDERER_ON_CHANGE) {
+      /**
+       * It is faster to use unused renderer instead of
+       * creating new renderer when additional renderer is needed.
+       *
+       * So we're not using this for now.
+       */
+      this.removeUnusedRenderer(itemsGroups);
+    }
 
     this.io.emit('items-updated', itemsGroups);
   }

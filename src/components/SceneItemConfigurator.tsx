@@ -1,27 +1,22 @@
-import React, {
-  forwardRef,
-  HTMLAttributes,
-  Ref,
-  useEffect,
-  useState,
-} from 'react';
+import React, { useEffect, useState } from 'react';
 import { XIcon, SwitchVerticalIcon } from '@heroicons/react/solid';
+import { DraggableProvided } from 'react-beautiful-dnd';
 import { SceneItem, SerializableSource } from '../services/app/types';
 import AppService from '../services/app/AppService';
 
-type SceneItemConfiguratorProps<
-  P = {
-    sceneItem: SceneItem;
-    onRemove: () => void;
-  }
-> = Omit<HTMLAttributes<HTMLDivElement>, keyof P> & P;
+type SceneItemConfiguratorProps = {
+  sceneItem: SceneItem;
+  onRemove: () => void;
+  draggableProvided: DraggableProvided;
+};
 
 const appService = AppService.getInstance();
 
-const SceneItemConfigurator = (
-  { sceneItem, onRemove, className }: SceneItemConfiguratorProps,
-  ref: Ref<HTMLDivElement>
-) => {
+const SceneItemConfigurator = ({
+  sceneItem,
+  onRemove,
+  draggableProvided,
+}: SceneItemConfiguratorProps) => {
   const [obsSource, setObsSource] = useState<SerializableSource>();
 
   useEffect(() => {
@@ -36,10 +31,11 @@ const SceneItemConfigurator = (
 
   return (
     <div
-      ref={ref}
-      className={['border border-cool-gray-900', className].join(' ')}
+      ref={draggableProvided.innerRef}
+      {...draggableProvided.draggableProps}
+      className="border border-cool-gray-900 mb-2 bg-white"
     >
-      <div className="flex">
+      <div className="flex" {...draggableProvided.dragHandleProps}>
         <div className="bg-cool-gray-900 text-white px-2 text-center flex items-center">
           <SwitchVerticalIcon className="align-middle w-6 h-6" />
         </div>
@@ -143,4 +139,4 @@ const SceneItemConfigurator = (
   );
 };
 
-export default forwardRef(SceneItemConfigurator);
+export default SceneItemConfigurator;

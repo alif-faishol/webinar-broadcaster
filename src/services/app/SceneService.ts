@@ -227,6 +227,18 @@ class SceneService {
     }
     return updatedSceneItem;
   }
+
+  @callableFromRenderer
+  async reorderItems(items: SceneItem[], sceneId?: string) {
+    const state = stateSubject.getValue();
+    const scene = state.scenes.find(
+      ({ id }) => id === (sceneId || state.activeScene?.id)
+    );
+    if (!scene) throw Error('scene or activeScene not found');
+    scene.items = items;
+    setState(state);
+    return items;
+  }
 }
 
 export default SceneService;

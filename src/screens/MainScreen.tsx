@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import { PlusIcon } from '@heroicons/react/solid';
-import SceneItemConfigurator from '../components/SceneItemConfigurator';
 import openModal from '../services/modal/renderer';
 import useAppState from '../hooks/useAppState';
 import AppService from '../services/app/AppService';
+import ElementsSidebar from '../components/ElementsSidebar';
 
 const sceneClassName = 'h-8 max-w-[8rem] px-4 truncate font-semibold mr-2 mb-2';
 const activeSceneClassName = `${sceneClassName} bg-cool-gray-900 text-white`;
@@ -103,41 +103,11 @@ const MainScreen = () => {
             <PlusIcon className="w-5 h-5" />
           </button>
         </div>
-      </div>
-      <div className="flex-1 overflow-hidden self-stretch flex flex-col">
-        <div className="flex justify-between items-center mb-2">
-          {appState.activeScene && (
-            <>
-              <h2 className="text-lg font-bold">ELEMENTS</h2>
-              <button
-                className="h-8 px-2 bg-cool-gray-900 text-white"
-                type="button"
-                onClick={() => {
-                  if (!appState.activeScene) return;
-                  openModal('add-item');
-                }}
-              >
-                <PlusIcon className="w-5 h-5" />
-              </button>
-            </>
-          )}
-        </div>
-        <div className="flex-1">
-          {appState.activeScene &&
-            appState.activeScene.items.map((item) => (
-              <SceneItemConfigurator
-                key={item.id}
-                sceneItem={item}
-                className="mb-2"
-                onRemove={() => {
-                  if (!appState.activeScene) return;
-                  appService.scene.removeItem(item.id, appState.activeScene.id);
-                }}
-              />
-            ))}
+        {process.env.NODE_ENV === 'development' && (
           <p>PORT: {appState.elementRendererPort}</p>
-        </div>
+        )}
       </div>
+      <ElementsSidebar activeScene={appState.activeScene} />
     </div>
   );
 };
