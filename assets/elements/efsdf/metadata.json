@@ -10,19 +10,23 @@
   "variables": {
     "title": {
       "type": "string",
-      "value": ""
+      "value": "",
+      "visibility": "normal"
     },
     "subtitle": {
       "type": "string",
-      "value": ""
+      "value": "",
+      "visibility": "normal"
     },
     "color": {
       "type": "color",
-      "value": "red"
+      "value": "red",
+      "visibility": "advanced-only"
     },
     "show": {
       "type": "boolean",
-      "value": true
+      "value": true,
+      "visibility": "normal"
     }
   }
 }

@@ -66,12 +66,13 @@ type ColorVariable = {
   value: string;
 };
 
-type Variable =
+type Variable = { visibility: 'normal' | 'advanced-only' | 'hidden' } & (
   | StringVariable
   | EnumVariable
   | NumberVariable
   | BooleanVariable
-  | ColorVariable;
+  | ColorVariable
+);
 
 export type OBSItemTemplate = {
   type: 'obs-source';
