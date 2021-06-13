@@ -1,7 +1,7 @@
 {
   "name": "webinar-broadcaster",
   "productName": "Webinar Broadcaster",
-  "version": "0.0.1",
+  "version": "2.3.0",
   "description": "Broadcaster software specifically tailored to host Webinars",
   "main": "./main.prod.js",
   "author": {
@@ -13,5 +13,9 @@
     "electron-rebuild": "node -r ../.erb/scripts/BabelRegister.js ../.erb/scripts/ElectronRebuild.js",
     "postinstall": "yarn electron-rebuild"
   },
-  "dependencies": {}
+  "dependencies": {
+    "socket.io": "^4.1.2",
+    "@heroicons/react": "^1.0.1",
+    "obs-studio-node": "https://obsstudionodes3.streamlabs.com/osn-0.15.14-release-win64.tar.gz"
+  }
 }

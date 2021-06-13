@@ -14,7 +14,14 @@ import path from 'path';
 import { app, BrowserWindow, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
+import installExtensions, {
+  REACT_DEVELOPER_TOOLS,
+} from 'electron-devtools-installer';
 import MenuBuilder from './menu';
+import registerModalHandler from './services/modal/main';
+import AppService from './services/app/AppService';
+import ElementRendererService from './services/element-renderer/ElementRendererService';
+import ElementService from './services/element/ElementService';
 
 export default class AppUpdater {
   constructor() {
@@ -38,25 +45,14 @@ if (
   require('electron-debug')();
 }
 
-const installExtensions = async () => {
-  const installer = require('electron-devtools-installer');
-  const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
-  const extensions = ['REACT_DEVELOPER_TOOLS'];
-
-  return installer
-    .default(
-      extensions.map((name) => installer[name]),
-      forceDownload
-    )
-    .catch(console.log);
-};
-
 const createWindow = async () => {
   if (
     process.env.NODE_ENV === 'development' ||
     process.env.DEBUG_PROD === 'true'
   ) {
-    await installExtensions();
+    await installExtensions([REACT_DEVELOPER_TOOLS], {
+      forceDownload: true,
+    }).catch((err) => console.log(err));
   }
 
   const RESOURCES_PATH = app.isPackaged
@@ -69,13 +65,21 @@ const createWindow = async () => {
 
   mainWindow = new BrowserWindow({
     show: false,
-    width: 1024,
-    height: 728,
+    minWidth: 1024,
+    minHeight: 600,
     icon: getAssetPath('icon.png'),
     webPreferences: {
       nodeIntegration: true,
+      contextIsolation: false,
     },
+    useContentSize: true,
   });
+
+  registerModalHandler(mainWindow);
+
+  AppService.init();
+  await ElementRendererService.init();
+  await ElementService.getInstance();
 
   mainWindow.loadURL(`file://${__dirname}/index.html`);
 
@@ -121,6 +125,10 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
+});
+
+app.on('will-quit', () => {
+  AppService.shutdown();
 });
 
 app.whenReady().then(createWindow).catch(console.log);

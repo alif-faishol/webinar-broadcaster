@@ -12,6 +12,7 @@ import TerserPlugin from 'terser-webpack-plugin';
 import baseConfig from './webpack.config.base';
 import CheckNodeEnv from '../scripts/CheckNodeEnv';
 import DeleteSourceMaps from '../scripts/DeleteSourceMaps';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
 
 CheckNodeEnv('production');
 DeleteSourceMaps();
@@ -25,18 +26,19 @@ export default merge(baseConfig, {
 
   mode: 'production',
 
-  target: 'electron-renderer',
+  target: 'web',
 
   entry: [
     'core-js',
     'regenerator-runtime/runtime',
-    path.join(__dirname, '../../src/index.tsx'),
+    path.join(__dirname, '../../src/services/element-renderer/index.tsx'),
   ],
 
   output: {
     path: path.join(__dirname, '../../src/dist'),
     publicPath: './dist/',
-    filename: 'renderer.prod.js',
+    filename: 'element-renderer.prod.js',
+    libraryTarget: 'umd',
   },
 
   module: {
@@ -55,72 +57,7 @@ export default merge(baseConfig, {
           'postcss-loader'
         ],
       },
-      // WOFF Font
-      {
-        test: /\.woff(\?v=\d+\.\d+\.\d+)?$/,
-        use: {
-          loader: 'url-loader',
-          options: {
-            limit: 10000,
-            mimetype: 'application/font-woff',
-          },
-        },
-      },
-      // WOFF2 Font
-      {
-        test: /\.woff2(\?v=\d+\.\d+\.\d+)?$/,
-        use: {
-          loader: 'url-loader',
-          options: {
-            limit: 10000,
-            mimetype: 'application/font-woff',
-          },
-        },
-      },
-      // OTF Font
-      {
-        test: /\.otf(\?v=\d+\.\d+\.\d+)?$/,
-        use: {
-          loader: 'url-loader',
-          options: {
-            limit: 10000,
-            mimetype: 'font/otf',
-          },
-        },
-      },
-      // TTF Font
-      {
-        test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/,
-        use: {
-          loader: 'url-loader',
-          options: {
-            limit: 10000,
-            mimetype: 'application/octet-stream',
-          },
-        },
-      },
-      // EOT Font
-      {
-        test: /\.eot(\?v=\d+\.\d+\.\d+)?$/,
-        use: 'file-loader',
-      },
-      // SVG Font
-      {
-        test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
-        use: {
-          loader: 'url-loader',
-          options: {
-            limit: 10000,
-            mimetype: 'image/svg+xml',
-          },
-        },
-      },
-      // Common Image Formats
-      {
-        test: /\.(?:ico|gif|png|jpg|jpeg|webp)$/,
-        use: 'url-loader',
-      },
-    ],
+    ]
   },
 
   optimization: {
@@ -130,7 +67,6 @@ export default merge(baseConfig, {
         new TerserPlugin({
           parallel: true,
         }),
-        new CssMinimizerPlugin(),
       ],
   },
 
@@ -152,6 +88,8 @@ export default merge(baseConfig, {
     new MiniCssExtractPlugin({
       filename: 'style.css',
     }),
+
+    new HtmlWebpackPlugin({filename: 'element-renderer.prod.html'}),
 
     new BundleAnalyzerPlugin({
       analyzerMode:
