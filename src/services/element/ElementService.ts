@@ -5,7 +5,7 @@ import electron from 'electron';
 import * as yup from 'yup';
 import mapValues from 'lodash/mapValues';
 import { IpcMainInvokeEvent } from 'electron/main';
-import { CustomItemTemplate } from '../app/types';
+import { CustomItemTemplate, EAlignment } from '../app/types';
 import { callableFromRenderer } from '../app/utils';
 
 const readdir = util.promisify(fs.readdir);
@@ -21,6 +21,7 @@ const MetadataSchema = yup.object().shape({
     width: yup.number().required(),
     height: yup.number().required(),
   }),
+  defaultAlignment: yup.string().oneOf(Object.keys(EAlignment)),
   variables: yup.lazy((obj) =>
     yup.object(
       mapValues(obj, () =>

@@ -5,8 +5,9 @@
   "container": {
     "configurable": false,
     "width": 1920,
-    "height": 1920
+    "height": 500
   },
+  "defaultAlignment": "bottom-left",
   "variables": {
     "title": {
       "type": "string",

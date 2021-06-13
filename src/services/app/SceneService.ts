@@ -6,12 +6,14 @@ import { Variables } from 'electron-log';
 import {
   CustomItem,
   CustomItemTemplate,
+  EAlignment,
   OBSItemTemplate,
   SceneItem,
   SceneItemTransformValues,
   SerializableSceneItem,
 } from './types';
 import { callableFromRenderer } from './utils';
+import TransformUtils from './TransformUtils';
 import SourceService from './SourceService';
 import { setState, stateSubject } from './AppState';
 
@@ -110,6 +112,10 @@ class SceneService {
         rotation: 0,
         crop: { top: 0, right: 0, bottom: 0, left: 0 },
         ...template,
+        ...TransformUtils.alignToScreen(
+          template.container,
+          template.defaultAlignment
+        ),
       };
       scene.items = [newItem, ...scene.items];
     }

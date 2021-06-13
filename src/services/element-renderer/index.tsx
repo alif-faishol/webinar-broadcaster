@@ -17,10 +17,15 @@ const Item = ({ item }: { item: CustomItem }) => {
     <root.div
       style={{
         position: 'absolute',
+        left: item.position.x,
+        top: item.position.y,
+        width: item.container.width,
+        height: item.container.height,
       }}
     >
       {item.css && <link rel="stylesheet" href={item.css} />}
       <JsxParser
+        className="root"
         jsx={item.template}
         disableKeyGeneration
         bindings={
@@ -55,37 +60,16 @@ const App = () => {
 
   if (layer === undefined || Number.isNaN(layer) || !itemsGroups[layer]) {
     return null;
-    // return (
-    //   <div
-    //     style={{
-    //       background: 'rgba(255, 0, 0, 0.5)',
-    //       width: 1920,
-    //       height: 1080,
-    //       display: 'flex',
-    //       justifyContent: 'center',
-    //       alignItems: 'center',
-    //     }}
-    //   >
-    //     <h1
-    //       style={{
-    //         color: 'white',
-    //         padding: 48,
-    //         fontSize: 64,
-    //         textAlign: 'center',
-    //       }}
-    //     >
-    //       Layer not found!
-    //     </h1>
-    //   </div>
-    // );
   }
 
   return (
-    <div style={{ width: 1920, height: 1080, position: 'relative' }}>
-      {itemsGroups[layer].reverse().map((item) => (
-        <Item key={item.id} item={item} />
-      ))}
-    </div>
+    <>
+      <div style={{ width: 1920, height: 1080, position: 'relative' }}>
+        {itemsGroups[layer].reverse().map((item) => (
+          <Item key={item.id} item={item} />
+        ))}
+      </div>
+    </>
   );
 };
 

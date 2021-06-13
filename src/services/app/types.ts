@@ -80,6 +80,17 @@ export type OBSItemTemplate = {
   obsSourceType: string;
 };
 
+export enum EAlignment {
+  'top' = 'top',
+  'bottom' = 'bottom',
+  'left' = 'left',
+  'right' = 'right',
+  'bottom-left' = 'bottom-left',
+  'bottom-right' = 'bottom-right',
+  'top-left' = 'top-left',
+  'top-right' = 'top-right',
+}
+
 export type CustomItemTemplate = {
   name: string;
   author: string;
@@ -88,6 +99,7 @@ export type CustomItemTemplate = {
   thumbnail?: string;
   css?: string;
   template: string;
+  defaultAlignment?: EAlignment;
   container: {
     configurable: boolean;
     width: number;

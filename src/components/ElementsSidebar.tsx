@@ -80,6 +80,7 @@ const ElementsSidebar: FC<ElementsSidebarProps> = ({ activeScene }) => {
                     )}
                   </Draggable>
                 ))}
+                {provided.placeholder}
               </div>
             )}
           </Droppable>

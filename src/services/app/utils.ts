@@ -37,8 +37,6 @@ export const setSetting = (
 
 /**
  * Handle calls from renderer using electron IPC
- *
- * WARNING: currently decorated method cannot use "this"
  */
 export function callableFromRenderer<
   TReturn,
