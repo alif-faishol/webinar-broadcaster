@@ -69,6 +69,29 @@ export function callableFromRenderer<
   return descriptor;
 }
 
-export default {
-  setSetting,
+export const serializeProperties = (
+  osnProperties: osn.IProperties
+): Array<Omit<osn.IProperty, 'next' | 'modified'>> => {
+  const properties = [];
+  let iterableProperties = osnProperties.first();
+  while (iterableProperties) {
+    properties.push({
+      name: iterableProperties.name,
+      description: iterableProperties.description,
+      enabled: iterableProperties.enabled,
+      longDescription: iterableProperties.longDescription,
+      status: iterableProperties.status,
+      type: iterableProperties.type,
+      value: iterableProperties.value,
+      visible: iterableProperties.visible,
+      details:
+        'format' in iterableProperties.details
+          ? iterableProperties.details
+          : undefined,
+    });
+    iterableProperties = iterableProperties.next();
+  }
+  return properties;
 };
+
+export default {};

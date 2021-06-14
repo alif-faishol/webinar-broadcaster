@@ -1,13 +1,8 @@
 import { BrowserWindow, IpcMainInvokeEvent } from 'electron';
 import * as osn from 'obs-studio-node';
+import { setState } from './AppState';
+import { Bounds } from './types';
 import { callableFromRenderer } from './utils';
-
-type Bounds = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
 
 class DisplayService {
   event?: IpcMainInvokeEvent;
@@ -25,6 +20,7 @@ class DisplayService {
         bounds.height
       );
       osn.NodeObs.OBS_content_moveDisplay(previewId, bounds.x, bounds.y);
+      setState((ps) => ({ ...ps, previewBounds: bounds }));
     } catch (err) {
       throw Error(err.message);
     }

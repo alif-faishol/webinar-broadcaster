@@ -6,7 +6,6 @@ import { Variables } from 'electron-log';
 import {
   CustomItem,
   CustomItemTemplate,
-  EAlignment,
   OBSItemTemplate,
   SceneItem,
   SceneItemTransformValues,
@@ -135,12 +134,6 @@ class SceneService {
           });
           const sceneItem = SceneService.serializeSceneItem(osnSceneItem);
           scene.items = [{ ...sceneItem, ...template }, ...scene.items];
-          await this.transformItem(scene.id, sceneItem.id, {
-            scale: {
-              x: 1920 / source.width,
-              y: 1080 / source.height,
-            },
-          });
         } catch (err) {
           osnSource.release();
           osnSource.remove();
@@ -212,7 +205,7 @@ class SceneService {
         ? transformFnOrValues(sceneItem)
         : transformFnOrValues;
 
-    const updatedSceneItem = { ...sceneItem, ...transformValues };
+    const updatedSceneItem = Object.assign(sceneItem, transformValues);
     if (typeof itemId === 'number') {
       try {
         const osnScene = osn.SceneFactory.fromName(scene.id);
@@ -231,6 +224,7 @@ class SceneService {
         throw Error(err.message);
       }
     }
+    setState(state);
     return updatedSceneItem;
   }
 

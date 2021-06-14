@@ -7,7 +7,7 @@ type AddSourceModalProps = {
   onSubmit: () => void;
 };
 
-const OBS_TEMPLATES: Array<CustomItemTemplate | OBSItemTemplate> = [
+const OBS_TEMPLATES: OBSItemTemplate[] = [
   {
     type: 'obs-source',
     obsSourceType: 'monitor_capture',

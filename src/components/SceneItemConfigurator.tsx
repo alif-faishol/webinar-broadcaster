@@ -3,6 +3,7 @@ import { XIcon, SwitchVerticalIcon } from '@heroicons/react/solid';
 import { DraggableProvided } from 'react-beautiful-dnd';
 import { SceneItem, SerializableSource } from '../services/app/types';
 import AppService from '../services/app/AppService';
+import openModal from '../services/modal/renderer';
 
 type SceneItemConfiguratorProps = {
   sceneItem: SceneItem;
@@ -134,6 +135,16 @@ const SceneItemConfigurator = ({
             );
           return undefined;
         })}
+        <div>
+          <button
+            type="button"
+            onClick={() => {
+              openModal('transform-item', sceneItem);
+            }}
+          >
+            transform
+          </button>
+        </div>
       </div>
     </div>
   );

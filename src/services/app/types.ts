@@ -6,6 +6,13 @@ declare module 'obs-studio-node' {
   }
 }
 
+export type Bounds = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
 export type SerializableSource = {
   id: osn.IInput['name'];
   settings: osn.IInput['settings'];
@@ -130,6 +137,7 @@ export type Scene = {
 
 export type AppState = {
   scenes: Scene[];
+  previewBounds?: Bounds;
   activeScene?: Scene;
   elementRendererPort?: number;
 };

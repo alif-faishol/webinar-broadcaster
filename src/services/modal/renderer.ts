@@ -1,8 +1,10 @@
 import { ipcRenderer, IpcRendererEvent } from 'electron';
+import { SceneItem } from '../app/types';
 
 type OpenModal = {
   (type: 'add-item', args?: undefined): Promise<void>;
   (type: 'add-scene', args?: undefined): Promise<string | undefined>;
+  (type: 'transform-item', item: SceneItem): Promise<void>;
 };
 
 const openModal: OpenModal = (type: any, args: any): Promise<any> =>

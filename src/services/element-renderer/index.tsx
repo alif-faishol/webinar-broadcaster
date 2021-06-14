@@ -19,8 +19,11 @@ const Item = ({ item }: { item: CustomItem }) => {
         position: 'absolute',
         left: item.position.x,
         top: item.position.y,
+        transform: `scale(${item.scale.x}, ${item.scale.y})`,
+        transformOrigin: 'top left',
         width: item.container.width,
         height: item.container.height,
+        overflow: 'hidden',
       }}
     >
       {item.css && <link rel="stylesheet" href={item.css} />}
@@ -47,6 +50,7 @@ const App = () => {
 
   useEffect(() => {
     socket.on('items-updated', (newState: typeof itemsGroups) => {
+      console.log('updated', newState);
       setItemsGroups(newState);
     });
   }, []);

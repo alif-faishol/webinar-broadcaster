@@ -26,10 +26,9 @@ const ElementsSidebar: FC<ElementsSidebarProps> = ({ activeScene }) => {
 
       const { items } = activeScene;
 
-      const reordered = [...items];
-      const [removed] = reordered.splice(sourceIndex, 1);
-      reordered.splice(destinationIndex, 0, removed);
-      appService.scene.reorderItems(reordered);
+      const [removed] = items.splice(sourceIndex, 1);
+      items.splice(destinationIndex, 0, removed);
+      appService.scene.reorderItems(items);
     },
     [activeScene]
   );

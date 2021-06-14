@@ -2,7 +2,7 @@ import { IpcMainInvokeEvent } from 'electron/main';
 import * as osn from 'obs-studio-node';
 import { v4 as uuid } from 'uuid';
 import { SerializableSource } from './types';
-import { callableFromRenderer } from './utils';
+import { callableFromRenderer, serializeProperties } from './utils';
 
 class SourceService {
   event?: IpcMainInvokeEvent;
@@ -48,26 +48,6 @@ class SourceService {
   }
 
   static serializeSource(source: osn.IInput): SerializableSource {
-    const properties = [];
-    let iterableProperties = source.properties.first();
-    while (iterableProperties) {
-      properties.push({
-        name: iterableProperties.name,
-        description: iterableProperties.description,
-        enabled: iterableProperties.enabled,
-        longDescription: iterableProperties.longDescription,
-        status: iterableProperties.status,
-        type: iterableProperties.type,
-        value: iterableProperties.value,
-        visible: iterableProperties.visible,
-        details:
-          'format' in iterableProperties.details
-            ? iterableProperties.details
-            : undefined,
-      });
-      iterableProperties = iterableProperties.next();
-    }
-
     return {
       id: source.name,
       settings: source.settings,
@@ -82,7 +62,7 @@ class SourceService {
       syncOffset: source.syncOffset,
       type: source.type,
       volume: source.volume,
-      properties,
+      properties: serializeProperties(source.properties),
     };
   }
 }
