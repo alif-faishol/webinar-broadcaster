@@ -1,6 +1,6 @@
 import { BrowserWindow, IpcMainInvokeEvent } from 'electron';
 import * as osn from 'obs-studio-node';
-import { setState } from './AppState';
+import { setState, stateSubject } from './AppState';
 import { Bounds } from './types';
 import { callableFromRenderer } from './utils';
 
@@ -11,9 +11,6 @@ class DisplayService {
   async resizePreview(previewId: string, bounds: Bounds) {
     if (!this.event) throw Error('no event');
     try {
-      const window = BrowserWindow.fromWebContents(this.event.sender);
-      if (!window) throw Error('no window');
-
       osn.NodeObs.OBS_content_resizeDisplay(
         previewId,
         bounds.width,
@@ -30,20 +27,16 @@ class DisplayService {
   async attachPreview(previewId: string, bounds: Bounds, sourceId?: string) {
     if (!this.event) throw Error('no event');
     try {
-      const window = BrowserWindow.fromWebContents(this.event.sender);
-      if (!window) throw Error('Window not found!');
+      const { windowHandle } = stateSubject.getValue();
+      if (!windowHandle) throw Error('Window handle not registered!');
       if (sourceId) {
         osn.NodeObs.OBS_content_createSourcePreviewDisplay(
-          window.getNativeWindowHandle(),
+          windowHandle,
           sourceId,
           previewId
         );
       } else {
-        osn.NodeObs.OBS_content_createDisplay(
-          window.getNativeWindowHandle(),
-          previewId,
-          0
-        );
+        osn.NodeObs.OBS_content_createDisplay(windowHandle, previewId, 0);
       }
       osn.NodeObs.OBS_content_setShouldDrawUI(previewId, false);
       osn.NodeObs.OBS_content_setPaddingSize(previewId, 0);

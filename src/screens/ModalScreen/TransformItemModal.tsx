@@ -136,7 +136,7 @@ const TransformItemModal: FC<TransformItemModalProps> = ({ item, onClose }) => {
         className="fixed"
         style={{
           left: containerBounds.x,
-          top: containerBounds.y - 20,
+          top: containerBounds.y,
           width: containerBounds.width,
           height: containerBounds.height,
         }}

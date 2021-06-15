@@ -23,11 +23,12 @@ const MainScreen = () => {
 
     const onDevicePixelRatioChanged = () => {
       if (!previewInitializedRef.current) return;
+      console.log('changed', window.devicePixelRatio);
       appService.display.resizePreview(previewId, {
         width: width * window.devicePixelRatio,
         height: height * window.devicePixelRatio,
         x: x * window.devicePixelRatio,
-        y: (y + 20) * window.devicePixelRatio,
+        y: y * window.devicePixelRatio,
       });
     };
 
@@ -41,7 +42,7 @@ const MainScreen = () => {
         width: width * window.devicePixelRatio,
         height: height * window.devicePixelRatio,
         x: x * window.devicePixelRatio,
-        y: (y + 20) * window.devicePixelRatio,
+        y: y * window.devicePixelRatio,
       })
       .then(() => {
         previewInitializedRef.current = true;
@@ -57,18 +58,16 @@ const MainScreen = () => {
   }, []);
 
   return (
-    <div className="p-4 min-h-screen flex h-full">
-      <div className="mr-4 flex-shrink-0 flex-grow-0">
+    <div className="flex h-full">
+      <div className="p-4 flex-shrink-0 flex-grow-0">
         <div
           ref={previewRef}
-          className="bg-cool-gray-400 border border-cool-gray-900 flex items-center justify-center"
+          className="border border-cool-gray-900 flex items-center justify-center"
           style={{
             width: 1920 * 0.35,
             height: 1080 * 0.35,
           }}
-        >
-          <p className="font-bold">Nothing to preview</p>
-        </div>
+        />
         <div className="py-1 flex mt-2">
           <h2 className="text-lg font-bold mr-2">SCENES</h2>
           <div className="flex-1 overflow-x-hidden">

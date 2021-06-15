@@ -252,6 +252,7 @@
     "electron-updater": "^4.3.4",
     "exponential-backoff": "^3.1.0",
     "express": "^4.17.1",
+    "frameless-titlebar": "^2.1.4",
     "history": "^5.0.0",
     "http-proxy": "^1.18.1",
     "jotai": "^0.16.9",

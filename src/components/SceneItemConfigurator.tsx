@@ -113,7 +113,7 @@ const SceneItemConfigurator = ({
         {obsSource?.properties.map((item) => {
           if (item.type === 6)
             return (
-              <label>
+              <label key={item.name}>
                 {item.description}
                 <select
                   onChange={({ target: { value } }) => {

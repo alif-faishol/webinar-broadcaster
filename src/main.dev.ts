@@ -11,7 +11,7 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 import path from 'path';
-import { app, BrowserWindow, shell } from 'electron';
+import { app, BrowserView, BrowserWindow, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import installExtensions, {
@@ -22,6 +22,7 @@ import registerModalHandler from './services/modal/main';
 import AppService from './services/app/AppService';
 import ElementRendererService from './services/element-renderer/ElementRendererService';
 import ElementService from './services/element/ElementService';
+import { setState } from './services/app/AppState';
 
 export default class AppUpdater {
   constructor() {
@@ -65,35 +66,97 @@ const createWindow = async () => {
 
   mainWindow = new BrowserWindow({
     show: false,
+    icon: getAssetPath('icon.png'),
     minWidth: 1024,
     minHeight: 600,
-    icon: getAssetPath('icon.png'),
+    frame: false,
+    movable: false,
+    resizable: false,
+    titleBarStyle: 'hidden',
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+    },
+  });
+
+  const frontendWindow = new BrowserWindow({
+    show: false,
+    parent: mainWindow,
+    minWidth: 1024,
+    minHeight: 600,
+    transparent: true,
+    frame: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
+      enableRemoteModule: true,
     },
-    useContentSize: true,
   });
-
-  registerModalHandler(mainWindow);
+  frontendWindow.on('move', () => {
+    if (!mainWindow) return;
+    mainWindow.setBounds(frontendWindow.getContentBounds());
+  });
+  frontendWindow.on('resize', () => {
+    if (!mainWindow) return;
+    mainWindow.setBounds(frontendWindow.getContentBounds());
+  });
+  frontendWindow.on('maximize', () => {
+    if (!mainWindow) return;
+    mainWindow.maximize();
+    mainWindow.setBounds(frontendWindow.getContentBounds());
+  });
+  frontendWindow.on('close', () => {
+    if (!mainWindow) return;
+    mainWindow.close();
+    mainWindow.setBounds(frontendWindow.getContentBounds());
+  });
+  mainWindow.on('restore', () => {
+    if (!mainWindow) return;
+    frontendWindow.focus();
+  });
+  frontendWindow.on('unmaximize', () => {
+    if (!mainWindow) return;
+    mainWindow.unmaximize();
+    mainWindow.setBounds(frontendWindow.getContentBounds());
+  });
+  frontendWindow.on('minimize', () => {
+    if (!mainWindow) return;
+    mainWindow.minimize();
+    mainWindow.setBounds(frontendWindow.getContentBounds());
+  });
+  frontendWindow.on('hide', () => {
+    if (!mainWindow) return;
+    mainWindow.hide();
+    mainWindow.setBounds(frontendWindow.getContentBounds());
+  });
+  frontendWindow.on('show', () => {
+    if (!mainWindow) return;
+    mainWindow.show();
+    mainWindow.setBounds(frontendWindow.getContentBounds());
+  });
+  registerModalHandler(frontendWindow);
 
   AppService.init();
   await ElementRendererService.init();
-  await ElementService.getInstance();
+  ElementService.getInstance();
+  setState((ps) => ({
+    ...ps,
+    windowHandle: mainWindow?.getNativeWindowHandle(),
+  }));
 
-  mainWindow.loadURL(`file://${__dirname}/index.html`);
+  frontendWindow.loadURL(`file://${__dirname}/index.html`);
 
   // @TODO: Use 'ready-to-show' event
   //        https://github.com/electron/electron/blob/master/docs/api/browser-window.md#using-ready-to-show-event
-  mainWindow.webContents.on('did-finish-load', () => {
+  frontendWindow.webContents.on('did-finish-load', () => {
     if (!mainWindow) {
       throw new Error('"mainWindow" is not defined');
     }
     if (process.env.START_MINIMIZED) {
       mainWindow.minimize();
     } else {
-      mainWindow.show();
-      mainWindow.focus();
+      frontendWindow.show();
+      frontendWindow.focus();
     }
   });
 
@@ -101,7 +164,7 @@ const createWindow = async () => {
     mainWindow = null;
   });
 
-  const menuBuilder = new MenuBuilder(mainWindow);
+  const menuBuilder = new MenuBuilder(frontendWindow);
   menuBuilder.buildMenu();
 
   // Open urls in the user's browser

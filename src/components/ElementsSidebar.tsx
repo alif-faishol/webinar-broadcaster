@@ -34,7 +34,7 @@ const ElementsSidebar: FC<ElementsSidebarProps> = ({ activeScene }) => {
   );
 
   return (
-    <div className="flex-1 overflow-hidden self-stretch flex flex-col">
+    <div className="flex-1 overflow-auto self-stretch flex flex-col py-4 pr-4">
       <div className="flex justify-between items-center mb-2">
         {activeScene && (
           <>

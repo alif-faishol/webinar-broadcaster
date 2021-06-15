@@ -140,4 +140,5 @@ export type AppState = {
   previewBounds?: Bounds;
   activeScene?: Scene;
   elementRendererPort?: number;
+  windowHandle?: Buffer;
 };
