@@ -3,65 +3,44 @@ import { HashRouter as Router, Switch, Route } from 'react-router-dom';
 import { Windmill } from '@windmill/react-ui';
 import { Provider as JotaiProvider } from 'jotai';
 import './App.global.css';
-import electron from 'electron';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
+import { ipcRenderer, IpcRendererEvent } from 'electron';
 import TitleBar from 'frameless-titlebar';
+import { Platform } from 'frameless-titlebar/dist/title-bar/typings';
 import Icon from '../assets/icon.png';
 import MainScreen from './screens/MainScreen';
 import ModalScreen from './screens/ModalScreen';
 
-const currentWindow = electron.remote.getCurrentWindow();
-
 export default function App() {
-  // manage window state, default to currentWindow maximized state
-  const [maximized, setMaximized] = useState(currentWindow.isMaximized());
-  // add window listeners for currentWindow
+  const [maximized, setMaximized] = useState(false);
+
   useEffect(() => {
-    const onMaximized = () => setMaximized(true);
-    const onRestore = () => setMaximized(false);
-    currentWindow.on('maximize', onMaximized);
-    currentWindow.on('unmaximize', onRestore);
+    const onMaximizedChange = (
+      _e: IpcRendererEvent,
+      newMaximizedState: boolean
+    ) => {
+      setMaximized(newMaximizedState);
+    };
+
+    ipcRenderer.on('maximized-change', onMaximizedChange);
+
     return () => {
-      currentWindow.removeListener('maximize', onMaximized);
-      currentWindow.removeListener('unmaximize', onRestore);
+      ipcRenderer.off('maximized-change', onMaximizedChange);
     };
   }, []);
-
-  // used by double click on the titlebar
-  // and by the maximize control button
-  const handleMaximize = () => {
-    if (maximized) {
-      currentWindow.restore();
-    } else {
-      currentWindow.maximize();
-    }
-  };
   return (
     <JotaiProvider>
       <Windmill>
         <div className="h-screen flex flex-col overflow-hidden">
           <TitleBar
-            iconSrc={Icon} // app icon
-            currentWindow={currentWindow} // electron window instance
-            platform={process.platform} // win32, darwin, linux
-            theme={
-              {
-                // any theme overrides specific
-                // to your application :)
-              }
-            }
+            iconSrc={Icon}
+            platform={process.platform as Platform}
             title="Webinar Broadcaster"
-            onClose={() => currentWindow.close()}
-            onMinimize={() => currentWindow.minimize()}
-            onMaximize={handleMaximize}
-            // when the titlebar is double clicked
-            onDoubleClick={handleMaximize}
-            // hide minimize windows control
+            onClose={() => ipcRenderer.send('close')}
+            onMinimize={() => ipcRenderer.send('minimize')}
+            onMaximize={() => ipcRenderer.send('toggle-maximize')}
+            onDoubleClick={() => ipcRenderer.send('toggle-maximize')}
             disableMinimize={false}
-            // hide maximize windows control
             disableMaximize={false}
-            // is the current window maximized?
             maximized={maximized}
           />
           <ModalScreen />

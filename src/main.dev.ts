@@ -11,7 +11,7 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 import path from 'path';
-import { app, BrowserView, BrowserWindow, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import installExtensions, {
@@ -92,38 +92,6 @@ const createWindow = async () => {
       enableRemoteModule: true,
     },
   });
-  frontendWindow.on('move', () => {
-    if (!mainWindow) return;
-    mainWindow.setBounds(frontendWindow.getContentBounds());
-  });
-  frontendWindow.on('resize', () => {
-    if (!mainWindow) return;
-    mainWindow.setBounds(frontendWindow.getContentBounds());
-  });
-  frontendWindow.on('maximize', () => {
-    if (!mainWindow) return;
-    mainWindow.maximize();
-    mainWindow.setBounds(frontendWindow.getContentBounds());
-  });
-  frontendWindow.on('close', () => {
-    if (!mainWindow) return;
-    mainWindow.close();
-    mainWindow.setBounds(frontendWindow.getContentBounds());
-  });
-  mainWindow.on('restore', () => {
-    if (!mainWindow) return;
-    frontendWindow.focus();
-  });
-  frontendWindow.on('unmaximize', () => {
-    if (!mainWindow) return;
-    mainWindow.unmaximize();
-    mainWindow.setBounds(frontendWindow.getContentBounds());
-  });
-  frontendWindow.on('minimize', () => {
-    if (!mainWindow) return;
-    mainWindow.minimize();
-    mainWindow.setBounds(frontendWindow.getContentBounds());
-  });
   frontendWindow.on('hide', () => {
     if (!mainWindow) return;
     mainWindow.hide();
@@ -132,6 +100,41 @@ const createWindow = async () => {
   frontendWindow.on('show', () => {
     if (!mainWindow) return;
     mainWindow.show();
+    mainWindow.setBounds(frontendWindow.getContentBounds());
+  });
+  frontendWindow.on('move', () => {
+    if (!mainWindow) return;
+    mainWindow.setBounds(frontendWindow.getContentBounds());
+  });
+  frontendWindow.on('resize', () => {
+    if (!mainWindow) return;
+    mainWindow.setBounds(frontendWindow.getContentBounds());
+  });
+  ipcMain.on('toggle-maximize', (event) => {
+    if (!mainWindow) return;
+    if (mainWindow.isMaximized()) {
+      mainWindow.unmaximize();
+      frontendWindow.unmaximize();
+      frontendWindow.setBounds(mainWindow.getContentBounds());
+    } else {
+      frontendWindow.maximize();
+      mainWindow.setBounds(frontendWindow.getContentBounds());
+      mainWindow.maximize();
+    }
+    event.reply('maximized-change', mainWindow.isMaximized());
+  });
+  ipcMain.on('minimize', () => {
+    if (!mainWindow) return;
+    mainWindow.minimize();
+    mainWindow.setBounds(frontendWindow.getContentBounds());
+  });
+  ipcMain.on('close', () => {
+    if (!mainWindow) return;
+    mainWindow.close();
+  });
+  mainWindow.on('restore', () => {
+    if (!mainWindow) return;
+    frontendWindow.focus();
     mainWindow.setBounds(frontendWindow.getContentBounds());
   });
   registerModalHandler(frontendWindow);
