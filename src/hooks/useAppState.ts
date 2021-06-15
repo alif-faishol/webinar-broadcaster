@@ -13,6 +13,7 @@ const useAppState = (): AppState => {
     ipcRenderer.send('subscribe-app-state');
     return () => {
       ipcRenderer.removeListener('app-state-updated', onAppStateUpdated);
+      ipcRenderer.send('unusbscribe-app-state');
     };
   }, []);
 

@@ -116,8 +116,12 @@ const createWindow = async () => {
       mainWindow.unmaximize();
       frontendWindow.unmaximize();
       frontendWindow.setBounds(mainWindow.getContentBounds());
+      frontendWindow.movable = true;
+      frontendWindow.resizable = true;
     } else {
       frontendWindow.maximize();
+      frontendWindow.movable = false;
+      frontendWindow.resizable = false;
       mainWindow.setBounds(frontendWindow.getContentBounds());
       mainWindow.maximize();
     }
