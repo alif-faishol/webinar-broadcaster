@@ -1,9 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { PlusIcon } from '@heroicons/react/solid';
 import openModal from '../services/modal/renderer';
 import useAppState from '../hooks/useAppState';
 import AppService from '../services/app/AppService';
 import ElementsSidebar from '../components/ElementsSidebar';
+import ElementTransformer from '../components/ElementTransformer';
+import { SceneItemTransformValues } from '../services/app/types';
 
 const sceneClassName = 'h-8 max-w-[8rem] px-4 truncate font-semibold mr-2 mb-2';
 const activeSceneClassName = `${sceneClassName} bg-cool-gray-900 text-white`;
@@ -15,6 +17,21 @@ const MainScreen = () => {
   const previewRef = useRef<HTMLDivElement>(null);
   const previewInitializedRef = useRef<boolean>(false);
   const appState = useAppState();
+  const [elementToTransform, setElementToTransform] = useState<
+    SceneItemTransformValues & {
+      id: string | number;
+      width: number;
+      height: number;
+    }
+  >();
+
+  const handleTransformElement = useCallback(
+    (item: NonNullable<typeof elementToTransform>) => {
+      if (!appState.activeScene) return;
+      appService.scene.transformItem(appState.activeScene.id, item.id, item);
+    },
+    [appState.activeScene]
+  );
 
   useEffect(() => {
     if (!previewRef.current || previewInitializedRef.current) return undefined;
@@ -23,7 +40,6 @@ const MainScreen = () => {
 
     const onDevicePixelRatioChanged = () => {
       if (!previewInitializedRef.current) return;
-      console.log('changed', window.devicePixelRatio);
       appService.display.resizePreview(previewId, {
         width: width * window.devicePixelRatio,
         height: height * window.devicePixelRatio,
@@ -62,12 +78,21 @@ const MainScreen = () => {
       <div className="p-4 flex-shrink-0 flex-grow-0">
         <div
           ref={previewRef}
-          className="border border-cool-gray-900 flex items-center justify-center"
+          className="relative border border-cool-gray-900 flex items-center justify-center"
           style={{
             width: 1920 * 0.35,
             height: 1080 * 0.35,
           }}
-        />
+        >
+          {elementToTransform && (
+            <ElementTransformer
+              onClose={() => setElementToTransform(undefined)}
+              onChange={handleTransformElement}
+              item={elementToTransform}
+              containerSize={{ width: 1920 * 0.35, height: 1080 * 0.35 }}
+            />
+          )}
+        </div>
         <div className="py-1 flex mt-2">
           <h2 className="text-lg font-bold mr-2">SCENES</h2>
           <div className="flex-1 overflow-x-hidden">
@@ -106,7 +131,10 @@ const MainScreen = () => {
           <p>PORT: {appState.elementRendererPort}</p>
         )}
       </div>
-      <ElementsSidebar activeScene={appState.activeScene} />
+      <ElementsSidebar
+        activeScene={appState.activeScene}
+        onTransform={setElementToTransform}
+      />
     </div>
   );
 };

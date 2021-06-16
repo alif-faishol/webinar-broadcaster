@@ -7,7 +7,7 @@
     "width": 1920,
     "height": 500
   },
-  "defaultAlignment": "bottom-left",
+  "defaultAlignment": "top-left",
   "variables": {
     "title": {
       "type": "string",

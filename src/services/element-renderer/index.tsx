@@ -6,6 +6,10 @@ import JsxParser from 'react-jsx-parser';
 import { Variables } from 'electron-log';
 import 'tailwindcss/dist/base.min.css';
 import { CustomItem } from '../app/types';
+import {
+  PREVIEW_SCREEN_HEIGHT,
+  PREVIEW_SCREEN_WIDTH,
+} from '../app/TransformUtils';
 
 const elem = window.document.createElement('div');
 window.document.body.appendChild(elem);
@@ -21,26 +25,35 @@ const Item = ({ item }: { item: CustomItem }) => {
         top: item.position.y,
         transform: `scale(${item.scale.x}, ${item.scale.y})`,
         transformOrigin: 'top left',
-        width: item.container.width,
-        height: item.container.height,
         overflow: 'hidden',
+        width: item.container.width - item.crop.left - item.crop.right,
+        height: item.container.height - item.crop.top - item.crop.bottom,
       }}
     >
-      {item.css && <link rel="stylesheet" href={item.css} />}
-      <JsxParser
-        className="root"
-        jsx={item.template}
-        disableKeyGeneration
-        bindings={
-          item.variables &&
-          Object.entries(item.variables).reduce<{
-            [key: string]: Variables['value'];
-          }>((obj, [name, def]) => {
-            obj[name] = def.value;
-            return obj;
-          }, {})
-        }
-      />
+      <div
+        style={{
+          marginTop: -item.crop.top,
+          marginLeft: -item.crop.left,
+          width: item.container.width,
+          height: item.container.height,
+        }}
+      >
+        {item.css && <link rel="stylesheet" href={item.css} />}
+        <JsxParser
+          className="root"
+          jsx={item.template}
+          disableKeyGeneration
+          bindings={
+            item.variables &&
+            Object.entries(item.variables).reduce<{
+              [key: string]: Variables['value'];
+            }>((obj, [name, def]) => {
+              obj[name] = def.value;
+              return obj;
+            }, {})
+          }
+        />
+      </div>
     </root.div>
   );
 };
@@ -50,7 +63,6 @@ const App = () => {
 
   useEffect(() => {
     socket.on('items-updated', (newState: typeof itemsGroups) => {
-      console.log('updated', newState);
       setItemsGroups(newState);
     });
   }, []);
@@ -68,7 +80,13 @@ const App = () => {
 
   return (
     <>
-      <div style={{ width: 1920, height: 1080, position: 'relative' }}>
+      <div
+        style={{
+          width: PREVIEW_SCREEN_WIDTH,
+          height: PREVIEW_SCREEN_HEIGHT,
+          position: 'relative',
+        }}
+      >
         {itemsGroups[layer].reverse().map((item) => (
           <Item key={item.id} item={item} />
         ))}

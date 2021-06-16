@@ -8,16 +8,26 @@ import {
 } from 'react-beautiful-dnd';
 import openModal from '../services/modal/renderer';
 import AppService from '../services/app/AppService';
-import { Scene } from '../services/app/types';
+import { Scene, SceneItemTransformValues } from '../services/app/types';
 import SceneItemConfigurator from './SceneItemConfigurator';
 
 type ElementsSidebarProps = {
   activeScene?: Scene;
+  onTransform: (
+    transformValues: SceneItemTransformValues & {
+      id: string | number;
+      width: number;
+      height: number;
+    }
+  ) => void;
 };
 
 const appService = AppService.getInstance();
 
-const ElementsSidebar: FC<ElementsSidebarProps> = ({ activeScene }) => {
+const ElementsSidebar: FC<ElementsSidebarProps> = ({
+  activeScene,
+  onTransform,
+}) => {
   const onDragEnd: OnDragEndResponder = useCallback(
     (result) => {
       if (!result.destination || !activeScene) return;
@@ -71,6 +81,7 @@ const ElementsSidebar: FC<ElementsSidebarProps> = ({ activeScene }) => {
                       <SceneItemConfigurator
                         draggableProvided={draggableProvided}
                         sceneItem={item}
+                        onTransform={onTransform}
                         onRemove={() => {
                           if (!activeScene) return;
                           appService.scene.removeItem(item.id, activeScene.id);

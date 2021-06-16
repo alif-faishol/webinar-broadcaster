@@ -82,7 +82,6 @@ const TransformItemModal: FC<TransformItemModalProps> = ({ item, onClose }) => {
   const handleMoveItem: RndDragCallback = useCallback(
     (_e, data) => {
       if (!appState.activeScene) return;
-
       item.position = {
         x: item.crop.left * item.scale.x + data.x / previewWidthScale,
         y: item.crop.top * item.scale.y + data.y / previewHeightScale,
@@ -168,10 +167,7 @@ const TransformItemModal: FC<TransformItemModalProps> = ({ item, onClose }) => {
       .catch((err) => {
         throw err;
       });
-  }, [item.type]);
-
-  console.log(item.crop, item.position);
-
+  }, [item]);
   if (!appState.previewBounds || (item.type === 'obs-source' && !obsSource))
     return null;
 
@@ -194,9 +190,11 @@ const TransformItemModal: FC<TransformItemModalProps> = ({ item, onClose }) => {
         }}
       >
         <Rnd
-          default={{
+          position={{
             x: itemBounds.x,
             y: itemBounds.y,
+          }}
+          size={{
             height: itemBounds.height,
             width: itemBounds.width,
           }}

@@ -1,13 +1,17 @@
+import React, { FC, useEffect, useState } from 'react';
 import { ipcRenderer, IpcRendererEvent } from 'electron';
-import { useEffect, useState } from 'react';
+import { atom, useAtom } from 'jotai';
+
 import { AppState } from '../services/app/types';
 
-const useAppState = (): AppState => {
-  const [state, setState] = useState<AppState>({ scenes: [] });
+const appStateAtom = atom<AppState>({ scenes: [] });
+
+export const AppStateProvider: FC = ({ children }) => {
+  const [, setAppState] = useAtom(appStateAtom);
 
   useEffect(() => {
     const onAppStateUpdated = (_event: IpcRendererEvent, newState: unknown) => {
-      setState(newState as AppState);
+      setAppState(newState as AppState);
     };
     ipcRenderer.on('app-state-updated', onAppStateUpdated);
     ipcRenderer.send('subscribe-app-state');
@@ -15,9 +19,15 @@ const useAppState = (): AppState => {
       ipcRenderer.removeListener('app-state-updated', onAppStateUpdated);
       ipcRenderer.send('unusbscribe-app-state');
     };
-  }, []);
+  }, [setAppState]);
 
-  return state;
+  return <>{children}</>;
+};
+
+const useAppState = (): AppState => {
+  const [appState] = useAtom(appStateAtom);
+
+  return appState;
 };
 
 export default useAppState;
