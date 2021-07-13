@@ -1,5 +1,6 @@
-import electron, { IpcMainInvokeEvent } from 'electron';
+import electron, { IpcMainEvent, IpcMainInvokeEvent } from 'electron';
 import * as osn from 'obs-studio-node';
+import { BehaviorSubject } from 'rxjs';
 
 interface ISettingParam {
   name: string;
@@ -40,10 +41,9 @@ export const setSetting = (
  */
 export function callableFromRenderer<
   TReturn,
-  TArgs extends any[],
+  TArgs extends never[],
   TFn extends (...args: TArgs) => Promise<TReturn>
 >(
-  // eslint-disable-next-line @typescript-eslint/ban-types
   target: { event?: IpcMainInvokeEvent },
   propertyKey: string | symbol,
   descriptor: TypedPropertyDescriptor<TFn>
@@ -55,19 +55,91 @@ export function callableFromRenderer<
 
   if (process.type === 'browser' && electron.ipcMain) {
     electron.ipcMain.handle(channelId, (event: IpcMainInvokeEvent, ...args) => {
-      if (target) target.event = event;
-      return fn.apply(target, args as TArgs);
+      return fn.apply({ ...target, event }, args as TArgs);
     });
     return descriptor;
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  descriptor.value = (...args) => {
+  descriptor.value = ((...args) => {
     return electron.ipcRenderer.invoke(channelId, ...args);
-  };
+  }) as TFn;
   return descriptor;
 }
+
+export type ObservableMainProcProperty<T> = {
+  getValue: () => T;
+  subscribe: (fn: (value: T) => void) => () => void;
+};
+
+export const ObservableMainProc = <T>(defaultValue: T) => {
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  return (target: Object, propertyKey: string) => {
+    const channelId = `ObservableMainProc-${
+      target.constructor.name
+    }-${propertyKey.toString()}`;
+
+    let subject: BehaviorSubject<T> | undefined;
+    let rendererSubscribers: Array<(value: T) => void> = [];
+    if (process.type === 'browser' && electron.ipcMain) {
+      subject = new BehaviorSubject(defaultValue);
+      const subscribers: Map<string, IpcMainEvent> = new Map();
+
+      subject.subscribe((newValue) => {
+        subscribers.forEach((event) => {
+          event.reply(`newValue-${channelId}`, newValue);
+        });
+      });
+
+      electron.ipcMain.on(`getValue-${channelId}`, (event) => {
+        event.returnValue = subject?.getValue();
+      });
+
+      electron.ipcMain.on(`subscribe-${channelId}`, (event) => {
+        subscribers.set(`${event.processId}-${event.frameId}`, event);
+      });
+
+      electron.ipcMain.on(`newValue-${channelId}`, (_event, newValue) => {
+        subject?.next(newValue);
+      });
+    } else {
+      electron.ipcRenderer.on(`newValue-${channelId}`, (_event, arg) => {
+        rendererSubscribers.forEach((fn) => {
+          fn(arg);
+        });
+      });
+    }
+
+    const value: ObservableMainProcProperty<T> = {
+      getValue: () =>
+        subject
+          ? subject.getValue()
+          : electron.ipcRenderer.sendSync(`getValue-${channelId}`),
+      subscribe: (fn) => {
+        if (subject) {
+          const subscription = subject.subscribe(fn);
+          return subscription.unsubscribe;
+        }
+        electron.ipcRenderer.send(`subscribe-${channelId}`);
+        rendererSubscribers.push(fn);
+        return () => {
+          rendererSubscribers = rendererSubscribers.filter(
+            (subscriber) => subscriber !== fn
+          );
+        };
+      },
+    };
+
+    Object.defineProperty(target, propertyKey, {
+      get: () => value,
+      set: (newValue: T) => {
+        if (subject) {
+          subject.next(newValue);
+        }
+        electron.ipcRenderer.send(`newValue-${channelId}`, newValue);
+      },
+    });
+  };
+};
 
 export const serializeProperties = (
   osnProperties: osn.IProperties

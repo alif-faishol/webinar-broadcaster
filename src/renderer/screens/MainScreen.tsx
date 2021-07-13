@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { PlusIcon } from '@heroicons/react/solid';
-import openModal from '../services/modal/renderer';
+import openModal from '../../services/modal/renderer';
 import useAppState from '../hooks/useAppState';
-import AppService from '../services/app/AppService';
+import AppService from '../../services/app/AppService';
 import ElementsSidebar from '../components/ElementsSidebar';
 import ElementTransformer from '../components/ElementTransformer';
-import { SceneItemTransformValues } from '../services/app/types';
+import { SceneItemTransformValues } from '../../services/app/types';
 
 const sceneClassName = 'h-8 max-w-[8rem] px-4 truncate font-semibold mr-2 mb-2';
 const activeSceneClassName = `${sceneClassName} bg-cool-gray-900 text-white`;

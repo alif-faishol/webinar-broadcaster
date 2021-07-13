@@ -5,8 +5,8 @@ import {
   SceneItem,
   SceneItemTransformValues,
   SerializableSource,
-} from '../services/app/types';
-import AppService from '../services/app/AppService';
+} from '../../services/app/types';
+import AppService from '../../services/app/AppService';
 
 type SceneItemConfiguratorProps = {
   sceneItem: SceneItem;

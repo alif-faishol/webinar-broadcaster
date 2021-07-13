@@ -4,7 +4,7 @@ import React, { FC, Fragment, useEffect, useState } from 'react';
 import { XIcon } from '@heroicons/react/solid';
 import AddSceneModal from './AddSceneModal';
 import AddItemModal from './AddItemModal';
-import TransformItemModal from './TransformItemModal';
+import ElementAdvancedSettingsModal from './ElementAdvancedSettingsModal';
 
 const Container: FC = ({ children }) => {
   return (
@@ -96,13 +96,17 @@ const ModalScreen: FC = () => {
             />
           </Container>
         )}
-        {modalState.type === 'transform-item' && (
-          <TransformItemModal
-            item={modalState.args}
-            onClose={() => {
-              setModalState((ps) => ({ ...ps, open: false }));
-            }}
-          />
+        {modalState.type === 'element-advanced-settings' && (
+          <Container>
+            <ElementAdvancedSettingsModal
+              onClose={() => {
+                setModalState((ps) => ({
+                  ...ps,
+                  open: false,
+                }));
+              }}
+            />
+          </Container>
         )}
       </Dialog>
     </Transition>

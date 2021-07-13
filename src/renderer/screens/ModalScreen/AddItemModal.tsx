@@ -1,7 +1,10 @@
 import React, { FC, useEffect, useState } from 'react';
-import AppService from '../../services/app/AppService';
-import { CustomItemTemplate, OBSItemTemplate } from '../../services/app/types';
-import ElementService from '../../services/element/ElementService';
+import AppService from '../../../services/app/AppService';
+import {
+  CustomItemTemplate,
+  OBSItemTemplate,
+} from '../../../services/app/types';
+import ElementService from '../../../services/element/ElementService';
 
 type AddSourceModalProps = {
   onSubmit: () => void;
@@ -37,9 +40,7 @@ const AddSourceModal: FC<AddSourceModalProps> = ({ onSubmit }) => {
   useEffect(() => {
     ElementService.getInstance()
       .loadTemplates()
-      .then((customTemplates) =>
-        setTemplates((ps) => [...ps, ...customTemplates])
-      )
+      .then((result) => setTemplates((ps) => [...ps, ...result.templates]))
       .catch(() => {});
   }, []);
 

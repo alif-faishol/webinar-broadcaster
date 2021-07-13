@@ -2,12 +2,13 @@ import { ipcRenderer, IpcRendererEvent } from 'electron';
 import { SceneItem } from '../app/types';
 
 type OpenModal = {
-  (type: 'add-item', args?: undefined): Promise<void>;
+  (type: 'add-item', args?: undefined): Promise<undefined>;
   (type: 'add-scene', args?: undefined): Promise<string | undefined>;
-  (type: 'transform-item', item: SceneItem): Promise<void>;
+  (type: 'element-advanced-settings', args: SceneItem): Promise<undefined>;
 };
 
-const openModal: OpenModal = (type: any, args: any): Promise<any> =>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const openModal: OpenModal = (type: string, args): Promise<any> =>
   new Promise((resolve) => {
     ipcRenderer.once(
       'modal-close',

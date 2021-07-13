@@ -2,7 +2,7 @@ import React, { FC, useEffect, useState } from 'react';
 import { ipcRenderer, IpcRendererEvent } from 'electron';
 import { atom, useAtom } from 'jotai';
 
-import { AppState } from '../services/app/types';
+import { AppState } from '../../services/app/types';
 
 const appStateAtom = atom<AppState>({ scenes: [] });
 

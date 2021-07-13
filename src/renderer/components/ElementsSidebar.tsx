@@ -6,9 +6,9 @@ import {
   Draggable,
   OnDragEndResponder,
 } from 'react-beautiful-dnd';
-import openModal from '../services/modal/renderer';
-import AppService from '../services/app/AppService';
-import { Scene, SceneItemTransformValues } from '../services/app/types';
+import openModal from '../../services/modal/renderer';
+import AppService from '../../services/app/AppService';
+import { Scene, SceneItemTransformValues } from '../../services/app/types';
 import SceneItemConfigurator from './SceneItemConfigurator';
 
 type ElementsSidebarProps = {

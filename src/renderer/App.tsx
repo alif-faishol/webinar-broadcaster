@@ -7,7 +7,7 @@ import { ipcRenderer, IpcRendererEvent } from 'electron';
 import TitleBar from 'frameless-titlebar';
 import { Platform } from 'frameless-titlebar/dist/title-bar/typings';
 import { AppStateProvider } from './hooks/useAppState';
-import Icon from '../assets/icon.png';
+import Icon from '../../assets/icon.png';
 import MainScreen from './screens/MainScreen';
 import ModalScreen from './screens/ModalScreen';
 

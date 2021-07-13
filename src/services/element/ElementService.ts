@@ -65,6 +65,7 @@ class ElementService {
       .map((file) => file.name);
 
     const templates: CustomItemTemplate[] = [];
+    const errors: Error[] = [];
     await Promise.all(
       elementFolders.map(async (folder) => {
         try {
@@ -97,12 +98,12 @@ class ElementService {
               : undefined,
           });
         } catch (err) {
-          console.error(err);
+          errors.push(err);
         }
       })
     );
     this.templates = templates;
-    return templates;
+    return { templates, errors };
   }
 
   static getInstance() {

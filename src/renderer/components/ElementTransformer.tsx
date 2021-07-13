@@ -4,14 +4,18 @@ import { ScissorsIcon } from '@heroicons/react/solid';
 import TransformUtils, {
   PREVIEW_SCREEN_HEIGHT,
   PREVIEW_SCREEN_WIDTH,
-} from '../services/app/TransformUtils';
-import { SceneItemTransformValues } from '../services/app/types';
+} from '../../services/app/TransformUtils';
+import { SceneItemTransformValues } from '../../services/app/types';
 import useKeyPress from '../hooks/useKeyPress';
 
 type ElementTransformerProps = {
   containerSize: { width: number; height: number };
-  item: SceneItemTransformValues & { width: number; height: number };
-  onChange: (transformValues: SceneItemTransformValues) => void;
+  item: SceneItemTransformValues & {
+    width: number;
+    height: number;
+    id: string | number;
+  };
+  onChange: (transformValues: ElementTransformerProps['item']) => void;
   onClose: () => void;
 };
 
@@ -28,6 +32,7 @@ const ElementTransformer: FC<ElementTransformerProps> = ({
 }) => {
   const [cropMode, setCropMode] = useState(false);
   const [item, setItem] = useState(itemProps);
+  const [dragAxis, setDragAxis] = useState<'both' | 'x' | 'y'>('both');
 
   const previewWidthScale = containerSize.width / PREVIEW_SCREEN_WIDTH;
   const previewHeightScale = containerSize.height / PREVIEW_SCREEN_HEIGHT;
@@ -40,6 +45,7 @@ const ElementTransformer: FC<ElementTransformerProps> = ({
 
   const handleMoveItem: RndDragCallback = useCallback(
     (_e, data) => {
+      setDragAxis('both');
       const newPosition = {
         x: item.crop.left * item.scale.x + data.x / previewWidthScale,
         y: item.crop.top * item.scale.y + data.y / previewHeightScale,
@@ -156,8 +162,18 @@ const ElementTransformer: FC<ElementTransformerProps> = ({
         ref={scalerRef}
         default={itemBounds}
         onDragStop={handleMoveItem}
+        onDrag={(_event, { x, y }) => {
+          if (!shiftKeyPressed) {
+            setDragAxis('both');
+            return;
+          }
+          setDragAxis(
+            Math.abs(itemBounds.y - y) > Math.abs(itemBounds.x - x) ? 'y' : 'x'
+          );
+        }}
         enableResizing={!cropMode}
         lockAspectRatio={shiftKeyPressed}
+        dragAxis={dragAxis}
         onResizeStop={handleResizeItem}
         className={[
           'border bg-opacity-20 border-green-500',
