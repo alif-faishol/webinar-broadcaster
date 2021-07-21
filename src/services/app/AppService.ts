@@ -1,4 +1,3 @@
-/* eslint-disable max-classes-per-file */
 import { v4 as uuid } from 'uuid';
 import * as osn from 'obs-studio-node';
 import electron, { ipcMain } from 'electron';
