@@ -23,6 +23,7 @@ import AppService from './services/app/AppService';
 import ElementRendererService from './services/element-renderer/ElementRendererService';
 import ElementService from './services/element/ElementService';
 import { setState } from './services/app/AppState';
+import BroadcasterService from './services/broadcaster';
 
 export default class AppUpdater {
   constructor() {
@@ -143,7 +144,8 @@ const createWindow = async () => {
   });
   registerModalHandler(frontendWindow);
 
-  AppService.init();
+  // AppService.init();
+  BroadcasterService.init(mainWindow.getNativeWindowHandle());
   await ElementRendererService.init();
   ElementService.getInstance();
   setState((ps) => ({

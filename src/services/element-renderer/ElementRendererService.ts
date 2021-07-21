@@ -7,8 +7,8 @@ import ejs from 'ejs';
 import electron from 'electron';
 import path from 'path';
 import * as osn from 'obs-studio-node';
-import { setState, stateSubject } from '../app/AppState';
-import { AppState, CustomItem, Scene, SceneItem } from '../app/types';
+import { CustomItem, Scene, SceneItem } from '../broadcaster/types';
+import BroadcasterService, { BroadcasterServiceState } from '../broadcaster';
 
 const REMOVE_UNUSED_RENDERER_ON_CHANGE = false;
 
@@ -47,15 +47,16 @@ class ElementRendererService {
     this.server = http.createServer(app);
 
     this.io = new IoServer(this.server);
-    stateSubject.subscribe((state) => this.handleStateChange(state));
+    const { observableState } = BroadcasterService.getInstance();
+    observableState.subscribe((state) => this.handleStateChange(state));
 
     // send current state when element renderer first connected
     this.io.on('connect', () => {
-      this.handleStateChange(stateSubject.getValue());
+      this.handleStateChange(observableState.getValue());
     });
 
     this.server.listen(port);
-    setState((ps) => ({ ...ps, elementRendererPort: port }));
+    // setState((ps) => ({ ...ps, elementRendererPort: port }));
   }
 
   static getInstance() {
@@ -160,7 +161,7 @@ class ElementRendererService {
     }
   }
 
-  private handleStateChange({ activeScene }: AppState) {
+  private handleStateChange({ activeScene }: BroadcasterServiceState) {
     if (!activeScene) {
       this.io.emit('items-updated', []);
       return;

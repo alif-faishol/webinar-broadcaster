@@ -4,8 +4,8 @@ import { ScissorsIcon } from '@heroicons/react/solid';
 import TransformUtils, {
   PREVIEW_SCREEN_HEIGHT,
   PREVIEW_SCREEN_WIDTH,
-} from '../../services/app/TransformUtils';
-import { SceneItemTransformValues } from '../../services/app/types';
+} from '../../services/broadcaster/utils/TransformUtils';
+import { SceneItemTransformValues } from '../../services/broadcaster/types';
 import useKeyPress from '../hooks/useKeyPress';
 
 type ElementTransformerProps = {

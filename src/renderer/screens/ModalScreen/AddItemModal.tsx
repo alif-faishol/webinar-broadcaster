@@ -1,9 +1,9 @@
 import React, { FC, useEffect, useState } from 'react';
-import AppService from '../../../services/app/AppService';
 import {
   CustomItemTemplate,
   OBSItemTemplate,
-} from '../../../services/app/types';
+} from '../../../services/broadcaster/types';
+import BroadcasterService from '../../../services/broadcaster';
 import ElementService from '../../../services/element/ElementService';
 
 type AddSourceModalProps = {
@@ -28,7 +28,7 @@ const OBS_TEMPLATES: OBSItemTemplate[] = [
   },
 ];
 
-const appService = AppService.getInstance();
+const broadcaster = BroadcasterService.getIpcRendererClient();
 
 const AddSourceModal: FC<AddSourceModalProps> = ({ onSubmit }) => {
   const [templates, setTemplates] =
@@ -80,7 +80,7 @@ const AddSourceModal: FC<AddSourceModalProps> = ({ onSubmit }) => {
         className="h-8 w-full bg-cool-gray-900 text-white text-sm font-semibold"
         onClick={async () => {
           if (!selectedTemplate) return;
-          await appService.scene.addItem({
+          await broadcaster.scene.addItem({
             ...selectedTemplate,
             name: name || selectedTemplate.name,
           });

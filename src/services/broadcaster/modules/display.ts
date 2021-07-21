@@ -1,8 +1,16 @@
 import * as osn from 'obs-studio-node';
+import BroadcasterServiceModule from '../BroadcasterServiceModule';
 import { Bounds } from '../types';
 
-class DisplayService {
-  constructor(private windowHandle: Buffer) {}
+class DisplayService extends BroadcasterServiceModule {
+  private windowHandle: Buffer;
+
+  constructor(windowHandle?: Buffer) {
+    super();
+    if (!windowHandle && process.type === 'browser')
+      throw Error('windowHandle is required!');
+    this.windowHandle = windowHandle as Buffer;
+  }
 
   async resizePreview(previewId: string, bounds: Bounds) {
     try {
@@ -42,6 +50,14 @@ class DisplayService {
     } catch (err) {
       throw Error(err.message);
     }
+  }
+
+  registerIpcMethods() {
+    return {
+      resizePreview: this.resizePreview.bind(this),
+      attachPreview: this.attachPreview.bind(this),
+      detachPreview: this.detachPreview.bind(this),
+    };
   }
 }
 

@@ -5,8 +5,8 @@ import {
   SceneItem,
   SceneItemTransformValues,
   SerializableSource,
-} from '../../services/app/types';
-import AppService from '../../services/app/AppService';
+} from '../../services/broadcaster/types';
+import BroadcasterService from '../../services/broadcaster';
 
 type SceneItemConfiguratorProps = {
   sceneItem: SceneItem;
@@ -21,7 +21,7 @@ type SceneItemConfiguratorProps = {
   draggableProvided: DraggableProvided;
 };
 
-const appService = AppService.getInstance();
+const broadcaster = BroadcasterService.getIpcRendererClient();
 
 const SceneItemConfigurator = ({
   sceneItem,
@@ -33,7 +33,7 @@ const SceneItemConfigurator = ({
 
   const loadObsSource = useCallback(async () => {
     if (sceneItem.type !== 'obs-source') return;
-    const newObsSource = await appService.source.get(sceneItem.sourceId);
+    const newObsSource = await broadcaster.source.get(sceneItem.sourceId);
     setObsSource(newObsSource);
   }, [sceneItem]);
 
@@ -80,7 +80,7 @@ const SceneItemConfigurator = ({
                       onChange={({ target: { value } }) => {
                         if (!sceneItem.variables) return;
                         sceneItem.variables[name].value = value;
-                        appService.scene.setCustomItemVariables(
+                        broadcaster.scene.setCustomItemVariables(
                           sceneItem.id,
                           sceneItem.variables
                         );
@@ -97,7 +97,7 @@ const SceneItemConfigurator = ({
                       onChange={({ target: { checked } }) => {
                         if (!sceneItem.variables) return;
                         sceneItem.variables[name].value = checked;
-                        appService.scene.setCustomItemVariables(
+                        broadcaster.scene.setCustomItemVariables(
                           sceneItem.id,
                           sceneItem.variables
                         );
@@ -115,7 +115,7 @@ const SceneItemConfigurator = ({
                 name="url"
                 defaultValue={obsSource.settings.url}
                 onChange={async ({ target: { value } }) => {
-                  await appService.source.setSettings(obsSource.id, {
+                  await broadcaster.source.setSettings(obsSource.id, {
                     url: value,
                   });
                 }}
@@ -130,7 +130,7 @@ const SceneItemConfigurator = ({
                   <select
                     onChange={async ({ target: { value } }) => {
                       if (item.details.format === 1) {
-                        await appService.source.setSettings(obsSource.id, {
+                        await broadcaster.source.setSettings(obsSource.id, {
                           [item.name]: parseInt(value, 10),
                         });
                       }
@@ -154,7 +154,7 @@ const SceneItemConfigurator = ({
                 let itemWidth = 0;
                 let itemHeight = 0;
                 if (sceneItem.type === 'obs-source') {
-                  const newObsSource = await appService.source.get(
+                  const newObsSource = await broadcaster.source.get(
                     sceneItem.sourceId
                   );
                   itemWidth = newObsSource.width;

@@ -7,33 +7,32 @@ abstract class BroadcasterServiceModule {
   };
 
   constructor() {
+    if (process.type !== 'browser') return;
     Object.entries(this.registerIpcMethods()).forEach(([fnName, fn]) => {
       electron.ipcMain.handle(
-        `${this.constructor.name}-${fnName}`,
+        `BROADCASTER_MODULE_IPC_${this.constructor.name}-${fnName}`,
         (_event, ...args) => fn(...args)
       );
     });
   }
 
-  getIpcMethods(): ReturnType<this['registerIpcMethods']> {
-    return (
-      Object.keys(this.registerIpcMethods())
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .map<[string, (...args: any[]) => Promise<any>]>((fnName) => [
-          fnName,
-          (...args) =>
-            electron.ipcRenderer.invoke(
-              `${this.constructor.name}-${fnName}`,
-              args
-            ),
-        ])
-        .reduce((obj, cur) => {
-          return {
-            ...obj,
-            [cur[0]]: cur[1],
-          };
-        }, {} as ReturnType<this['registerIpcMethods']>)
-    );
+  getIpcRendererMethods(): ReturnType<this['registerIpcMethods']> {
+    return Object.keys(this.registerIpcMethods())
+      .map<[string, (...args: unknown[]) => Promise<unknown>]>((fnName) => [
+        fnName,
+        (...args) => {
+          return electron.ipcRenderer.invoke(
+            `BROADCASTER_MODULE_IPC_${this.constructor.name}-${fnName}`,
+            ...args
+          );
+        },
+      ])
+      .reduce((obj, cur) => {
+        return {
+          ...obj,
+          [cur[0]]: cur[1],
+        };
+      }, {} as ReturnType<this['registerIpcMethods']>);
   }
 }
 

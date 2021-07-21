@@ -7,6 +7,7 @@ import { Scene } from './types';
 import SceneModule from './modules/scene';
 import DisplayModule from './modules/display';
 import { typedIpcMain } from '../ipc';
+import SourceModule from './modules/source';
 
 export type BroadcasterServiceState = {
   scenes: Scene[];
@@ -21,13 +22,15 @@ class BroadcasterService {
     { count: number; subsription: Subscription }
   > = new Map();
 
-  private observableState = new BehaviorSubject<BroadcasterServiceState>({
+  observableState = new BehaviorSubject<BroadcasterServiceState>({
     scenes: [],
   });
 
   scene: SceneModule;
 
   display: DisplayModule;
+
+  source: SourceModule;
 
   private constructor(windowHandle: Buffer) {
     if (process.type !== 'browser')
@@ -39,10 +42,11 @@ class BroadcasterService {
 
     this.scene = new SceneModule(this.observableState);
     this.display = new DisplayModule(windowHandle);
+    this.source = new SourceModule();
   }
 
   static getInstance() {
-    if (!this.instance) throw Error('Not initialized!');
+    if (!this.instance) throw Error('Not initialized!!');
     return this.instance;
   }
 
@@ -51,16 +55,31 @@ class BroadcasterService {
     this.instance = new BroadcasterService(windowHandle);
   }
 
-  static getRendererHandler() {
-    if (process.type !== 'renderer') throw Error('Not in renderer!');
-    if (!this.instance) throw Error('Not initialized!');
+  static getIpcRendererClient() {
+    if (process.type !== 'renderer') throw Error('Not in renderer process!');
     return {
-      scene: this.instance.scene.getIpcMethods(),
+      scene: new SceneModule().getIpcRendererMethods(),
+      display: new DisplayModule().getIpcRendererMethods(),
+      source: new SourceModule().getIpcRendererMethods(),
+      subscribe: (cb: (state: BroadcasterServiceState) => void) => {
+        electron.ipcRenderer.send('BROADCASTER_SUBSCRIBE_STATE');
+        const listener = (
+          _event: electron.IpcRendererEvent,
+          ...args: [BroadcasterServiceState]
+        ) => {
+          cb(args[0]);
+        };
+        electron.ipcRenderer.on('BROADCASTER_STATE_UPDATED', listener);
+        return () => {
+          electron.ipcRenderer.send('BROADCASTER_UNSUBSCRIBE_STATE');
+          electron.ipcRenderer.off('BROADCASTER_STATE_UPDATED', listener);
+        };
+      },
     };
   }
 
   private initStateSubscriptions() {
-    typedIpcMain.on('BROADCASTER_SUBSCRIBE_STATE', (event) => {
+    electron.ipcMain.on('BROADCASTER_SUBSCRIBE_STATE', (event) => {
       const existingSubscriber = this.stateSubscriptions.get(event.frameId);
       if (existingSubscriber) {
         this.stateSubscriptions.set(event.frameId, {
@@ -76,7 +95,7 @@ class BroadcasterService {
         });
       }
     });
-    typedIpcMain.on('BROADCASTER_UNSUBSCRIBE_STATE', (event) => {
+    electron.ipcMain.on('BROADCASTER_UNSUBSCRIBE_STATE', (event) => {
       const existingSubscriber = this.stateSubscriptions.get(event.frameId);
       if (!existingSubscriber) return;
       if (existingSubscriber.count > 1) {

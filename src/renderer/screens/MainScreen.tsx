@@ -1,22 +1,31 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { PlusIcon } from '@heroicons/react/solid';
 import openModal from '../../services/modal/renderer';
-import useAppState from '../hooks/useAppState';
-import AppService from '../../services/app/AppService';
 import ElementsSidebar from '../components/ElementsSidebar';
 import ElementTransformer from '../components/ElementTransformer';
 import { SceneItemTransformValues } from '../../services/app/types';
+import BroadcasterService, {
+  BroadcasterServiceState,
+} from '../../services/broadcaster';
 
 const sceneClassName = 'h-8 max-w-[8rem] px-4 truncate font-semibold mr-2 mb-2';
 const activeSceneClassName = `${sceneClassName} bg-cool-gray-900 text-white`;
 const inactiveSceneClassName = `${sceneClassName} border border-cool-gray-900`;
 
-const appService = AppService.getInstance();
+const broadcaster = BroadcasterService.getIpcRendererClient();
 
 const MainScreen = () => {
   const previewRef = useRef<HTMLDivElement>(null);
   const previewInitializedRef = useRef<boolean>(false);
-  const appState = useAppState();
+  // const appState = useAppState();
+  const [broadcasterState, setBroadcasterState] =
+    useState<BroadcasterServiceState>({ scenes: [] });
+
+  useEffect(() => {
+    const unsubscribe = broadcaster.subscribe(setBroadcasterState);
+    return unsubscribe;
+  }, []);
+
   const [elementToTransform, setElementToTransform] = useState<
     SceneItemTransformValues & {
       id: string | number;
@@ -27,10 +36,14 @@ const MainScreen = () => {
 
   const handleTransformElement = useCallback(
     (item: NonNullable<typeof elementToTransform>) => {
-      if (!appState.activeScene) return;
-      appService.scene.transformItem(appState.activeScene.id, item.id, item);
+      if (!broadcasterState.activeScene) return;
+      broadcaster.scene.transformItem(
+        broadcasterState.activeScene.id,
+        item.id,
+        item
+      );
     },
-    [appState.activeScene]
+    [broadcasterState.activeScene]
   );
 
   useEffect(() => {
@@ -40,7 +53,7 @@ const MainScreen = () => {
 
     const onDevicePixelRatioChanged = () => {
       if (!previewInitializedRef.current) return;
-      appService.display.resizePreview(previewId, {
+      broadcaster.display.resizePreview(previewId, {
         width: width * window.devicePixelRatio,
         height: height * window.devicePixelRatio,
         x: x * window.devicePixelRatio,
@@ -53,7 +66,7 @@ const MainScreen = () => {
     );
     mediaQueryList.addEventListener('change', onDevicePixelRatioChanged);
 
-    appService.display
+    broadcaster.display
       .attachPreview(previewId, {
         width: width * window.devicePixelRatio,
         height: height * window.devicePixelRatio,
@@ -97,14 +110,14 @@ const MainScreen = () => {
           <h2 className="text-lg font-bold mr-2">SCENES</h2>
           <div className="flex-1 overflow-x-hidden">
             <div className="mr-2">
-              {appState.scenes.map((scene) => (
+              {broadcasterState.scenes.map((scene) => (
                 <button
                   key={scene.id}
                   onClick={() => {
-                    appService.scene.activate(scene.id);
+                    broadcaster.scene.activate(scene.id);
                   }}
                   className={
-                    appState.activeScene?.id === scene.id
+                    broadcasterState.activeScene?.id === scene.id
                       ? activeSceneClassName
                       : inactiveSceneClassName
                   }
@@ -121,18 +134,16 @@ const MainScreen = () => {
             onClick={async () => {
               const sceneName = await openModal('add-scene');
               if (!sceneName) return;
-              await appService.scene.add(sceneName);
+              await broadcaster.scene.add(sceneName);
             }}
           >
             <PlusIcon className="w-5 h-5" />
           </button>
         </div>
-        {process.env.NODE_ENV === 'development' && (
-          <p>PORT: {appState.elementRendererPort}</p>
-        )}
+        {process.env.NODE_ENV === 'development' && <p>PORT: </p>}
       </div>
       <ElementsSidebar
-        activeScene={appState.activeScene}
+        activeScene={broadcasterState.activeScene}
         onTransform={setElementToTransform}
       />
     </div>

@@ -24,10 +24,14 @@ export const DEFAULT_TRANSFORM_VALUES = {
 } as const;
 
 class SceneModule extends BroadcasterServiceModule {
-  constructor(
-    private observableState: BehaviorSubject<BroadcasterServiceState>
-  ) {
+  private observableState: BehaviorSubject<BroadcasterServiceState>;
+
+  constructor(observableState?: BehaviorSubject<BroadcasterServiceState>) {
     super();
+    if (!observableState && process.type === 'browser')
+      throw Error('observableState required');
+    this.observableState =
+      observableState as BehaviorSubject<BroadcasterServiceState>;
   }
 
   static serializeSceneItem(sceneItem: osn.ISceneItem): SerializableSceneItem {
@@ -241,7 +245,12 @@ class SceneModule extends BroadcasterServiceModule {
 
   registerIpcMethods() {
     return {
-      reorderItems: this.reorderItems,
+      add: this.add.bind(this),
+      remove: this.remove.bind(this),
+      activate: this.activate.bind(this),
+      addItem: this.addItem.bind(this),
+      transformItem: this.transformItem.bind(this),
+      reorderItems: this.reorderItems.bind(this),
     };
   }
 }

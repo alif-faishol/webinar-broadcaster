@@ -7,9 +7,12 @@ import {
   OnDragEndResponder,
 } from 'react-beautiful-dnd';
 import openModal from '../../services/modal/renderer';
-import AppService from '../../services/app/AppService';
-import { Scene, SceneItemTransformValues } from '../../services/app/types';
+import {
+  Scene,
+  SceneItemTransformValues,
+} from '../../services/broadcaster/types';
 import SceneItemConfigurator from './SceneItemConfigurator';
+import BroadcasterService from '../../services/broadcaster';
 
 type ElementsSidebarProps = {
   activeScene?: Scene;
@@ -22,7 +25,7 @@ type ElementsSidebarProps = {
   ) => void;
 };
 
-const appService = AppService.getInstance();
+const broadcaster = BroadcasterService.getIpcRendererClient();
 
 const ElementsSidebar: FC<ElementsSidebarProps> = ({
   activeScene,
@@ -38,7 +41,7 @@ const ElementsSidebar: FC<ElementsSidebarProps> = ({
 
       const [removed] = items.splice(sourceIndex, 1);
       items.splice(destinationIndex, 0, removed);
-      appService.scene.reorderItems(items);
+      broadcaster.scene.reorderItems(items);
     },
     [activeScene]
   );
@@ -84,7 +87,7 @@ const ElementsSidebar: FC<ElementsSidebarProps> = ({
                         onTransform={onTransform}
                         onRemove={() => {
                           if (!activeScene) return;
-                          appService.scene.removeItem(item.id, activeScene.id);
+                          broadcaster.scene.removeItem(item.id, activeScene.id);
                         }}
                       />
                     )}

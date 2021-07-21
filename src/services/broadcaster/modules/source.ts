@@ -1,8 +1,9 @@
 import * as osn from 'obs-studio-node';
 import { v4 as uuid } from 'uuid';
+import BroadcasterServiceModule from '../BroadcasterServiceModule';
 import { SerializableSource } from '../types';
 
-class SourceService {
+class SourceModule extends BroadcasterServiceModule {
   async getTypes() {
     try {
       const inputTypes = osn.InputFactory.types();
@@ -15,7 +16,7 @@ class SourceService {
   async create(type: string) {
     try {
       const source = osn.InputFactory.create(type, uuid());
-      return SourceService.serializeSource(source);
+      return SourceModule.serializeSource(source);
     } catch (err) {
       throw Error(err.message);
     }
@@ -33,7 +34,7 @@ class SourceService {
   async get(sourceId: string) {
     try {
       const source = osn.InputFactory.fromName(sourceId);
-      return SourceService.serializeSource(source);
+      return SourceModule.serializeSource(source);
     } catch (err) {
       throw Error(err.message);
     }
@@ -82,6 +83,15 @@ class SourceService {
     }
     return properties;
   }
+
+  registerIpcMethods() {
+    return {
+      getTypes: this.getTypes.bind(this),
+      create: this.create.bind(this),
+      setSettings: this.setSettings.bind(this),
+      get: this.get.bind(this),
+    };
+  }
 }
 
-export default SourceService;
+export default SourceModule;
