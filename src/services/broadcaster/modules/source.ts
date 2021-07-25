@@ -1,6 +1,6 @@
 import * as osn from 'obs-studio-node';
 import { v4 as uuid } from 'uuid';
-import BroadcasterServiceModule from '../BroadcasterServiceModule';
+import BroadcasterServiceModule from './BroadcasterServiceModule';
 import { SerializableSource } from '../types';
 
 class SourceModule extends BroadcasterServiceModule {

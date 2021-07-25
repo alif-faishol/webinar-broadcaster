@@ -4,9 +4,8 @@ import path from 'path';
 import electron from 'electron';
 import * as yup from 'yup';
 import mapValues from 'lodash/mapValues';
-import { IpcMainInvokeEvent } from 'electron/main';
-import { CustomItemTemplate, EAlignment } from '../app/types';
-import { callableFromRenderer } from '../app/utils';
+import BroadcasterServiceModule from './BroadcasterServiceModule';
+import { CustomItemTemplate, EAlignment } from '../types';
 
 const readdir = util.promisify(fs.readdir);
 const readFile = util.promisify(fs.readFile);
@@ -34,27 +33,22 @@ const MetadataSchema = yup.object().shape({
   ),
 });
 
-class ElementService {
-  event?: IpcMainInvokeEvent;
-
-  private static instance: ElementService;
-
+class ElementModule extends BroadcasterServiceModule {
   private templates: CustomItemTemplate[] = [];
 
-  private constructor() {
-    this.loadTemplates();
+  constructor() {
+    super();
+    if (process.type === 'browser') this.loadTemplates();
   }
 
-  @callableFromRenderer
   async getTemplates() {
     return this.templates;
   }
 
-  @callableFromRenderer
   async loadTemplates() {
     const ELEMENTS_PATH = electron.app.isPackaged
       ? path.join(process.resourcesPath, 'assets/elements')
-      : path.join(__dirname, '../../../assets/elements');
+      : path.join(__dirname, '../../../../assets/elements');
 
     const elementFolders = (
       await readdir(ELEMENTS_PATH, {
@@ -106,10 +100,12 @@ class ElementService {
     return { templates, errors };
   }
 
-  static getInstance() {
-    if (!this.instance) this.instance = new ElementService();
-    return this.instance;
+  registerIpcMethods() {
+    return {
+      getTemplates: this.getTemplates.bind(this),
+      loadTemplates: this.loadTemplates.bind(this),
+    };
   }
 }
 
-export default ElementService;
+export default ElementModule;

@@ -14,7 +14,7 @@ import {
 import TransformUtils from '../utils/TransformUtils';
 import SourceModule from './source';
 import type { BroadcasterServiceState } from '..';
-import BroadcasterServiceModule from '../BroadcasterServiceModule';
+import BroadcasterServiceModule from './BroadcasterServiceModule';
 
 export const DEFAULT_TRANSFORM_VALUES = {
   scale: { x: 1, y: 1 },
@@ -249,6 +249,8 @@ class SceneModule extends BroadcasterServiceModule {
       remove: this.remove.bind(this),
       activate: this.activate.bind(this),
       addItem: this.addItem.bind(this),
+      setCustomItemVariables: this.setCustomItemVariables.bind(this),
+      removeItem: this.removeItem.bind(this),
       transformItem: this.transformItem.bind(this),
       reorderItems: this.reorderItems.bind(this),
     };

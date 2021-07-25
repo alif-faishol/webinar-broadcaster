@@ -5,11 +5,11 @@ import io from 'socket.io-client';
 import JsxParser from 'react-jsx-parser';
 import { Variables } from 'electron-log';
 import 'tailwindcss/dist/base.min.css';
-import { CustomItem } from '../app/types';
+import { CustomItem } from '../broadcaster/types';
 import {
   PREVIEW_SCREEN_HEIGHT,
   PREVIEW_SCREEN_WIDTH,
-} from '../app/TransformUtils';
+} from '../broadcaster/utils/TransformUtils';
 
 const elem = window.document.createElement('div');
 window.document.body.appendChild(elem);

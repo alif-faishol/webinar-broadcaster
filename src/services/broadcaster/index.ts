@@ -6,8 +6,9 @@ import path from 'path';
 import { Scene } from './types';
 import SceneModule from './modules/scene';
 import DisplayModule from './modules/display';
-import { typedIpcMain } from '../ipc';
 import SourceModule from './modules/source';
+import ElementModule from './modules/element';
+import { processTypeIs } from './utils/decorator';
 
 export type BroadcasterServiceState = {
   scenes: Scene[];
@@ -32,17 +33,21 @@ class BroadcasterService {
 
   source: SourceModule;
 
+  element: ElementModule;
+
   private constructor(windowHandle: Buffer) {
-    if (process.type !== 'browser')
-      throw Error('Not in electron main process!');
     const initResult = this.initObs();
     if (initResult !== 0) throw Error('Failed to initialize OBS!');
 
-    this.initStateSubscriptions();
+    this.initStateSubscriptionHandler();
 
+    /**
+     * Modules initialization
+     */
     this.scene = new SceneModule(this.observableState);
     this.display = new DisplayModule(windowHandle);
     this.source = new SourceModule();
+    this.element = new ElementModule();
   }
 
   static getInstance() {
@@ -55,12 +60,17 @@ class BroadcasterService {
     this.instance = new BroadcasterService(windowHandle);
   }
 
+  @processTypeIs('renderer')
   static getIpcRendererClient() {
-    if (process.type !== 'renderer') throw Error('Not in renderer process!');
     return {
+      /**
+       * Register modules' IPC Methods
+       */
       scene: new SceneModule().getIpcRendererMethods(),
       display: new DisplayModule().getIpcRendererMethods(),
       source: new SourceModule().getIpcRendererMethods(),
+      element: new ElementModule().getIpcRendererMethods(),
+
       subscribe: (cb: (state: BroadcasterServiceState) => void) => {
         electron.ipcRenderer.send('BROADCASTER_SUBSCRIBE_STATE');
         const listener = (
@@ -78,7 +88,7 @@ class BroadcasterService {
     };
   }
 
-  private initStateSubscriptions() {
+  private initStateSubscriptionHandler() {
     electron.ipcMain.on('BROADCASTER_SUBSCRIBE_STATE', (event) => {
       const existingSubscriber = this.stateSubscriptions.get(event.frameId);
       if (existingSubscriber) {

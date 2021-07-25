@@ -1,4 +1,5 @@
 import electron from 'electron';
+import { processTypeIs } from '../utils/decorator';
 
 abstract class BroadcasterServiceModule {
   abstract registerIpcMethods(): {
@@ -16,6 +17,7 @@ abstract class BroadcasterServiceModule {
     });
   }
 
+  @processTypeIs('renderer')
   getIpcRendererMethods(): ReturnType<this['registerIpcMethods']> {
     return Object.keys(this.registerIpcMethods())
       .map<[string, (...args: unknown[]) => Promise<unknown>]>((fnName) => [

@@ -3,7 +3,7 @@ import { PlusIcon } from '@heroicons/react/solid';
 import openModal from '../../services/modal/renderer';
 import ElementsSidebar from '../components/ElementsSidebar';
 import ElementTransformer from '../components/ElementTransformer';
-import { SceneItemTransformValues } from '../../services/app/types';
+import { SceneItemTransformValues } from '../../services/broadcaster/types';
 import BroadcasterService, {
   BroadcasterServiceState,
 } from '../../services/broadcaster';
@@ -17,7 +17,6 @@ const broadcaster = BroadcasterService.getIpcRendererClient();
 const MainScreen = () => {
   const previewRef = useRef<HTMLDivElement>(null);
   const previewInitializedRef = useRef<boolean>(false);
-  // const appState = useAppState();
   const [broadcasterState, setBroadcasterState] =
     useState<BroadcasterServiceState>({ scenes: [] });
 

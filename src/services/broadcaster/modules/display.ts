@@ -1,5 +1,5 @@
 import * as osn from 'obs-studio-node';
-import BroadcasterServiceModule from '../BroadcasterServiceModule';
+import BroadcasterServiceModule from './BroadcasterServiceModule';
 import { Bounds } from '../types';
 
 class DisplayService extends BroadcasterServiceModule {

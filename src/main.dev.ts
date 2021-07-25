@@ -19,10 +19,7 @@ import installExtensions, {
 } from 'electron-devtools-installer';
 import MenuBuilder from './menu';
 import registerModalHandler from './services/modal/main';
-import AppService from './services/app/AppService';
 import ElementRendererService from './services/element-renderer/ElementRendererService';
-import ElementService from './services/element/ElementService';
-import { setState } from './services/app/AppState';
 import BroadcasterService from './services/broadcaster';
 
 export default class AppUpdater {
@@ -144,14 +141,8 @@ const createWindow = async () => {
   });
   registerModalHandler(frontendWindow);
 
-  // AppService.init();
   BroadcasterService.init(mainWindow.getNativeWindowHandle());
   await ElementRendererService.init();
-  ElementService.getInstance();
-  setState((ps) => ({
-    ...ps,
-    windowHandle: mainWindow?.getNativeWindowHandle(),
-  }));
 
   frontendWindow.loadURL(`file://${__dirname}/index.html`);
 
@@ -200,7 +191,7 @@ app.on('window-all-closed', () => {
 });
 
 app.on('will-quit', () => {
-  AppService.shutdown();
+  BroadcasterService.shutdown();
 });
 
 app.whenReady().then(createWindow).catch(console.log);

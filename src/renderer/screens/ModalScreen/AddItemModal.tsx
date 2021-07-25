@@ -4,7 +4,6 @@ import {
   OBSItemTemplate,
 } from '../../../services/broadcaster/types';
 import BroadcasterService from '../../../services/broadcaster';
-import ElementService from '../../../services/element/ElementService';
 
 type AddSourceModalProps = {
   onSubmit: () => void;
@@ -38,7 +37,7 @@ const AddSourceModal: FC<AddSourceModalProps> = ({ onSubmit }) => {
   const selectedTemplate = templates[selectedTemplateIdx];
 
   useEffect(() => {
-    ElementService.getInstance()
+    broadcaster.element
       .loadTemplates()
       .then((result) => setTemplates((ps) => [...ps, ...result.templates]))
       .catch(() => {});

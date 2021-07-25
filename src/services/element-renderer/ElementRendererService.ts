@@ -56,6 +56,7 @@ class ElementRendererService {
     });
 
     this.server.listen(port);
+    console.log('ELEMENT RENDERER PORT:', port);
     // setState((ps) => ({ ...ps, elementRendererPort: port }));
   }
 
