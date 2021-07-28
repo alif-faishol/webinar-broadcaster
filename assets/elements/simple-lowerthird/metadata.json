@@ -10,21 +10,25 @@
   "defaultAlignment": "bottom-left",
   "variables": {
     "title": {
+      "label": "Title",
       "type": "string",
       "value": "",
       "visibility": "normal"
     },
     "subtitle": {
+      "label": "Subtitle",
       "type": "string",
       "value": "",
       "visibility": "normal"
     },
     "color": {
+      "label": "Color",
       "type": "color",
       "value": "red",
       "visibility": "advanced-only"
     },
     "show": {
+      "label": "Show",
       "type": "boolean",
       "value": true,
       "visibility": "normal"

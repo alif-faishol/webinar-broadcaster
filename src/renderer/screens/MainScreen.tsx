@@ -1,40 +1,32 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { PlusIcon } from '@heroicons/react/solid';
-import openModal from '../../services/modal/renderer';
+import { Typography, Layout, Tabs, Modal, Form, Input, Button } from 'antd';
 import ElementsSidebar from '../components/ElementsSidebar';
 import ElementTransformer from '../components/ElementTransformer';
-import { SceneItemTransformValues } from '../../services/broadcaster/types';
-import BroadcasterService, {
-  BroadcasterServiceState,
-} from '../../services/broadcaster';
-
-const sceneClassName = 'h-8 max-w-[8rem] px-4 truncate font-semibold mr-2 mb-2';
-const activeSceneClassName = `${sceneClassName} bg-cool-gray-900 text-white`;
-const inactiveSceneClassName = `${sceneClassName} border border-cool-gray-900`;
+import {
+  SceneItem,
+  SceneItemTransformValues,
+} from '../../services/broadcaster/types';
+import BroadcasterService from '../../services/broadcaster';
+import useBroadcasterState from '../hooks/useBroadcasterState';
 
 const broadcaster = BroadcasterService.getIpcRendererClient();
 
 const MainScreen = () => {
   const previewRef = useRef<HTMLDivElement>(null);
   const previewInitializedRef = useRef<boolean>(false);
-  const [broadcasterState, setBroadcasterState] =
-    useState<BroadcasterServiceState>({ scenes: [] });
 
-  useEffect(() => {
-    const unsubscribe = broadcaster.subscribe(setBroadcasterState);
-    return unsubscribe;
-  }, []);
+  const broadcasterState = useBroadcasterState();
 
   const [elementToTransform, setElementToTransform] = useState<
-    SceneItemTransformValues & {
-      id: string | number;
+    SceneItem & {
       width: number;
       height: number;
     }
   >();
+  const [addSceneModalOpen, setAddSceneModalOpen] = useState(false);
 
   const handleTransformElement = useCallback(
-    (item: NonNullable<typeof elementToTransform>) => {
+    (item: SceneItemTransformValues & { id: string | number }) => {
       if (!broadcasterState.activeScene) return;
       broadcaster.scene.transformItem(
         broadcasterState.activeScene.id,
@@ -45,33 +37,51 @@ const MainScreen = () => {
     [broadcasterState.activeScene]
   );
 
-  useEffect(() => {
-    if (!previewRef.current || previewInitializedRef.current) return undefined;
-    const previewId = 'output-preview';
-    const { width, height, x, y } = previewRef.current.getBoundingClientRect();
+  const getPreviewBounds = useCallback((scale = 1) => {
+    if (!previewRef.current)
+      return {
+        width: 0,
+        height: 0,
+        x: 0,
+        y: 0,
+      };
+    let { width, height, x, y } = previewRef.current.getBoundingClientRect();
+    if ((width / 16) * 9 > height) {
+      x += (width - (height / 9) * 16) / 2;
+      width = (height / 9) * 16;
+    } else {
+      y += (height - (width / 16) * 9) / 2;
+      height = (width / 16) * 9;
+    }
+    return {
+      width: width * scale,
+      height: height * scale,
+      x: x * scale,
+      y: y * scale,
+    };
+  }, []);
 
-    const onDevicePixelRatioChanged = () => {
+  useEffect(() => {
+    if (!previewRef.current) return undefined;
+    const previewId = 'output-preview';
+
+    const resizePreview = () => {
       if (!previewInitializedRef.current) return;
-      broadcaster.display.resizePreview(previewId, {
-        width: width * window.devicePixelRatio,
-        height: height * window.devicePixelRatio,
-        x: x * window.devicePixelRatio,
-        y: y * window.devicePixelRatio,
-      });
+      broadcaster.display.resizePreview(
+        previewId,
+        getPreviewBounds(window.devicePixelRatio)
+      );
     };
 
     const mediaQueryList = matchMedia(
       `(resolution: ${window.devicePixelRatio}dppx)`
     );
-    mediaQueryList.addEventListener('change', onDevicePixelRatioChanged);
+    mediaQueryList.addEventListener('change', resizePreview);
+    window.addEventListener('resize', resizePreview);
 
+    if (previewInitializedRef.current) return undefined;
     broadcaster.display
-      .attachPreview(previewId, {
-        width: width * window.devicePixelRatio,
-        height: height * window.devicePixelRatio,
-        x: x * window.devicePixelRatio,
-        y: y * window.devicePixelRatio,
-      })
+      .attachPreview(previewId, getPreviewBounds(window.devicePixelRatio))
       .then(() => {
         previewInitializedRef.current = true;
         return undefined;
@@ -81,71 +91,109 @@ const MainScreen = () => {
       });
 
     return () => {
-      mediaQueryList.removeEventListener('change', onDevicePixelRatioChanged);
+      mediaQueryList.removeEventListener('change', resizePreview);
+      window.removeEventListener('resize', resizePreview);
     };
-  }, []);
+  }, [getPreviewBounds]);
+
+  useEffect(() => {
+    if (!broadcasterState.activeScene?.selectedItem) {
+      setElementToTransform(undefined);
+      return;
+    }
+    broadcaster.scene
+      .getItemWithDimensions()
+      .then(setElementToTransform)
+      .catch(console.error);
+  }, [broadcasterState.activeScene?.selectedItem]);
 
   return (
-    <div className="flex h-full">
-      <div className="p-4 flex-shrink-0 flex-grow-0">
-        <div
-          ref={previewRef}
-          className="relative border border-cool-gray-900 flex items-center justify-center"
-          style={{
-            width: 1920 * 0.35,
-            height: 1080 * 0.35,
+    <Layout className="p-4 bg-transparent h-full">
+      <Layout.Content className="flex-grow-0 flex-shrink-0">
+        <Tabs
+          type="editable-card"
+          tabBarExtraContent={{
+            left: (
+              <div className="h-10 flex items-center">
+                <Typography.Title level={5} className="mr-4">
+                  SCENES
+                </Typography.Title>
+              </div>
+            ),
+          }}
+          activeKey={broadcasterState.activeScene?.id}
+          onChange={broadcaster.scene.activate}
+          onEdit={async (targetKey, action) => {
+            if (action === 'add') {
+              setAddSceneModalOpen(true);
+              // const sceneName = await openModal('add-scene');
+              // if (!sceneName) return;
+              // broadcaster.scene.add(sceneName);
+            }
+            if (action === 'remove' && typeof targetKey === 'string') {
+              broadcaster.scene.remove(targetKey);
+            }
           }}
         >
-          {elementToTransform && (
-            <ElementTransformer
-              onClose={() => setElementToTransform(undefined)}
-              onChange={handleTransformElement}
-              item={elementToTransform}
-              containerSize={{ width: 1920 * 0.35, height: 1080 * 0.35 }}
-            />
-          )}
-        </div>
-        <div className="py-1 flex mt-2">
-          <h2 className="text-lg font-bold mr-2">SCENES</h2>
-          <div className="flex-1 overflow-x-hidden">
-            <div className="mr-2">
-              {broadcasterState.scenes.map((scene) => (
-                <button
-                  key={scene.id}
-                  onClick={() => {
-                    broadcaster.scene.activate(scene.id);
-                  }}
-                  className={
-                    broadcasterState.activeScene?.id === scene.id
-                      ? activeSceneClassName
-                      : inactiveSceneClassName
-                  }
-                  type="button"
-                >
-                  {scene.name}
-                </button>
-              ))}
-            </div>
+          {broadcasterState.scenes.map((scene) => (
+            <Tabs.TabPane key={scene.id} tab={scene.name} closable />
+          ))}
+        </Tabs>
+      </Layout.Content>
+      <Layout className="bg-transparent">
+        <Layout.Content>
+          <div ref={previewRef} className="border mx-auto w-full h-full">
+            {elementToTransform && (
+              <ElementTransformer
+                onClose={() => broadcaster.scene.selectItem()}
+                onChange={handleTransformElement}
+                item={elementToTransform}
+                containerBounds={getPreviewBounds()}
+              />
+            )}
           </div>
-          <button
-            className="h-8 px-2 bg-cool-gray-900 text-white"
-            type="button"
-            onClick={async () => {
-              const sceneName = await openModal('add-scene');
-              if (!sceneName) return;
-              await broadcaster.scene.add(sceneName);
-            }}
+        </Layout.Content>
+        <Layout.Sider theme="light" width={384} className="pl-4">
+          <ElementsSidebar activeScene={broadcasterState.activeScene} />
+        </Layout.Sider>
+      </Layout>
+      <Modal
+        forceRender
+        visible={addSceneModalOpen}
+        footer={null}
+        onCancel={() => setAddSceneModalOpen(false)}
+        title="Add Scene"
+      >
+        <Form
+          preserve={false}
+          layout="vertical"
+          onFinish={({ name }: { name: string }) => {
+            broadcaster.scene.add(name);
+            setAddSceneModalOpen(false);
+          }}
+        >
+          <Form.Item
+            label="Scene Name"
+            name="name"
+            rules={[{ required: true }]}
           >
-            <PlusIcon className="w-5 h-5" />
-          </button>
-        </div>
-        {process.env.NODE_ENV === 'development' && <p>PORT: </p>}
-      </div>
-      <ElementsSidebar
-        activeScene={broadcasterState.activeScene}
-        onTransform={setElementToTransform}
-      />
-    </div>
+            <Input type="text" />
+          </Form.Item>
+          <Form.Item className="text-right mb-0">
+            <Button
+              htmlType="button"
+              className="mr-2"
+              onClick={() => setAddSceneModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="primary" htmlType="submit">
+              Submit
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+    </Layout>
   );
 };
 

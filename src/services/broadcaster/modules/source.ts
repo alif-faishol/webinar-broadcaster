@@ -1,9 +1,21 @@
 import * as osn from 'obs-studio-node';
 import { v4 as uuid } from 'uuid';
+import { BehaviorSubject } from 'rxjs';
 import BroadcasterServiceModule from './BroadcasterServiceModule';
 import { SerializableSource } from '../types';
+import type { BroadcasterServiceState } from '..';
 
 class SourceModule extends BroadcasterServiceModule {
+  private observableState: BehaviorSubject<BroadcasterServiceState>;
+
+  constructor(observableState?: BehaviorSubject<BroadcasterServiceState>) {
+    super();
+    if (!observableState && process.type === 'browser')
+      throw Error('observableState required');
+    this.observableState =
+      observableState as BehaviorSubject<BroadcasterServiceState>;
+  }
+
   async getTypes() {
     try {
       const inputTypes = osn.InputFactory.types();
@@ -26,6 +38,18 @@ class SourceModule extends BroadcasterServiceModule {
     try {
       const source = osn.InputFactory.fromName(sourceId);
       source.update(settings);
+      this.observableState.next(this.observableState.value);
+    } catch (err) {
+      throw Error(err.message);
+    }
+  }
+
+  async clickButton(sourceId: string, buttonName: string) {
+    try {
+      const source = osn.InputFactory.fromName(sourceId);
+      (source.properties.get(buttonName) as osn.IButtonProperty).buttonClicked(
+        source
+      );
     } catch (err) {
       throw Error(err.message);
     }
@@ -90,6 +114,7 @@ class SourceModule extends BroadcasterServiceModule {
       create: this.create.bind(this),
       setSettings: this.setSettings.bind(this),
       get: this.get.bind(this),
+      clickButton: this.clickButton.bind(this),
     };
   }
 }

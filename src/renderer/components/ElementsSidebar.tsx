@@ -1,36 +1,24 @@
 import React, { FC, useCallback } from 'react';
-import { PlusIcon } from '@heroicons/react/solid';
 import {
   DragDropContext,
   Droppable,
   Draggable,
   OnDragEndResponder,
 } from 'react-beautiful-dnd';
+import { Typography, Button } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import openModal from '../../services/modal/renderer';
-import {
-  Scene,
-  SceneItemTransformValues,
-} from '../../services/broadcaster/types';
+import { Scene } from '../../services/broadcaster/types';
 import SceneItemConfigurator from './SceneItemConfigurator';
 import BroadcasterService from '../../services/broadcaster';
 
 type ElementsSidebarProps = {
   activeScene?: Scene;
-  onTransform: (
-    transformValues: SceneItemTransformValues & {
-      id: string | number;
-      width: number;
-      height: number;
-    }
-  ) => void;
 };
 
 const broadcaster = BroadcasterService.getIpcRendererClient();
 
-const ElementsSidebar: FC<ElementsSidebarProps> = ({
-  activeScene,
-  onTransform,
-}) => {
+const ElementsSidebar: FC<ElementsSidebarProps> = ({ activeScene }) => {
   const onDragEnd: OnDragEndResponder = useCallback(
     (result) => {
       if (!result.destination || !activeScene) return;
@@ -47,21 +35,21 @@ const ElementsSidebar: FC<ElementsSidebarProps> = ({
   );
 
   return (
-    <div className="flex-1 overflow-auto self-stretch flex flex-col py-4 pr-4">
-      <div className="flex justify-between items-center mb-2">
+    <div className="h-full flex flex-col">
+      <div className="flex justify-between items-center mb-2 flex-shrink-0">
         {activeScene && (
           <>
-            <h2 className="text-lg font-bold">ELEMENTS</h2>
-            <button
-              className="h-8 px-2 bg-cool-gray-900 text-white"
-              type="button"
+            <Typography.Title level={5}>ELEMENTS</Typography.Title>
+            <Button
+              type="primary"
               onClick={() => {
                 if (!activeScene) return;
                 openModal('add-item');
               }}
+              icon={<PlusOutlined />}
             >
-              <PlusIcon className="w-5 h-5" />
-            </button>
+              Add
+            </Button>
           </>
         )}
       </div>
@@ -72,7 +60,7 @@ const ElementsSidebar: FC<ElementsSidebarProps> = ({
               <div
                 {...provided.droppableProps}
                 ref={provided.innerRef}
-                className="flex-1"
+                className="flex-1 overflow-auto"
               >
                 {activeScene.items.map((item, index) => (
                   <Draggable
@@ -84,7 +72,6 @@ const ElementsSidebar: FC<ElementsSidebarProps> = ({
                       <SceneItemConfigurator
                         draggableProvided={draggableProvided}
                         sceneItem={item}
-                        onTransform={onTransform}
                         onRemove={() => {
                           if (!activeScene) return;
                           broadcaster.scene.removeItem(item.id, activeScene.id);

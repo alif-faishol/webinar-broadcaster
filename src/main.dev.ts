@@ -108,6 +108,10 @@ const createWindow = async () => {
     if (!mainWindow) return;
     mainWindow.setBounds(frontendWindow.getContentBounds());
   });
+  frontendWindow.on('focus', () => {
+    if (!mainWindow) return;
+    mainWindow.moveTop();
+  });
   ipcMain.on('toggle-maximize', (event) => {
     if (!mainWindow) return;
     if (mainWindow.isMaximized()) {

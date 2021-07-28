@@ -1,7 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import * as osn from 'obs-studio-node';
 import { backOff } from 'exponential-backoff';
-import { Variables } from 'electron-log';
 import { BehaviorSubject } from 'rxjs';
 import {
   CustomItem,
@@ -26,12 +25,20 @@ export const DEFAULT_TRANSFORM_VALUES = {
 class SceneModule extends BroadcasterServiceModule {
   private observableState: BehaviorSubject<BroadcasterServiceState>;
 
-  constructor(observableState?: BehaviorSubject<BroadcasterServiceState>) {
+  private source: SourceModule;
+
+  constructor(
+    observableState?: BehaviorSubject<BroadcasterServiceState>,
+    source?: SourceModule
+  ) {
     super();
-    if (!observableState && process.type === 'browser')
-      throw Error('observableState required');
+    if (process.type === 'browser') {
+      if (!observableState) throw Error('observableState required');
+      if (!source) throw Error('source required');
+    }
     this.observableState =
       observableState as BehaviorSubject<BroadcasterServiceState>;
+    this.source = source as SourceModule;
   }
 
   static serializeSceneItem(sceneItem: osn.ISceneItem): SerializableSceneItem {
@@ -81,7 +88,7 @@ class SceneModule extends BroadcasterServiceModule {
       const state = this.observableState.getValue();
       this.observableState.next({
         ...state,
-        scenes: state.scenes.filter((scene) => scene.id === sceneId),
+        scenes: state.scenes.filter((scene) => scene.id !== sceneId),
       });
     } catch (err) {
       throw Error(err.message);
@@ -104,11 +111,7 @@ class SceneModule extends BroadcasterServiceModule {
     template: CustomItemTemplate | OBSItemTemplate,
     sceneId?: string
   ) {
-    const state = this.observableState.getValue();
-    const scene = state.scenes.find(
-      ({ id }) => id === (sceneId || state.activeScene?.id)
-    );
-    if (!scene) throw Error('scene or activeScene not found');
+    const scene = this.getSceneWithFallback(sceneId);
 
     if (template.type === 'browser-rendered') {
       const newItem = {
@@ -151,31 +154,25 @@ class SceneModule extends BroadcasterServiceModule {
         throw Error(err.message);
       }
     }
-    this.observableState.next(state);
+    this.observableState.next(this.observableState.value);
   }
 
   async setCustomItemVariables(
     itemId: string,
-    variables: Variables,
+    variables: CustomItemTemplate['variables'],
     sceneId?: string
   ) {
-    const state = this.observableState.getValue();
-    const scene = state.scenes.find(
-      ({ id }) => id === (sceneId || state.activeScene?.id)
-    );
-    if (!scene) throw Error('scene or activeScene not found');
+    const scene = this.getSceneWithFallback(sceneId);
     const sceneItem = scene.items.find(
       (item) => item.type === 'browser-rendered' && item.id === itemId
     ) as CustomItem;
     if (!sceneItem) throw Error('Scene item not found!');
     sceneItem.variables = variables;
-    this.observableState.next(state);
+    this.observableState.next(this.observableState.value);
   }
 
   async removeItem(itemId: number | string, sceneId?: string) {
-    const state = this.observableState.getValue();
-    const scene = state.scenes.find(({ id }) => id === sceneId);
-    if (!scene) throw Error('Scene not found!');
+    const scene = this.getSceneWithFallback(sceneId);
     if (typeof itemId === 'number') {
       const osnScene = osn.SceneFactory.fromName(scene.id);
       if (!osnScene) throw Error('scene not found in OBS');
@@ -186,7 +183,7 @@ class SceneModule extends BroadcasterServiceModule {
       osnSceneItem.remove();
     }
     scene.items = scene.items.filter((item) => item.id !== itemId);
-    this.observableState.next(state);
+    this.observableState.next(this.observableState.value);
     return itemId;
   }
 
@@ -197,9 +194,7 @@ class SceneModule extends BroadcasterServiceModule {
       | ((item: SceneItem) => Partial<SceneItemTransformValues>)
       | Partial<SceneItemTransformValues>
   ) {
-    const state = this.observableState.getValue();
-    const scene = state.scenes.find(({ id }) => id === sceneId);
-    if (!scene) throw Error('Scene not found!');
+    const scene = this.getSceneWithFallback(sceneId);
     const sceneItemIndex = scene.items.findIndex((item) => item.id === itemId);
     if (sceneItemIndex === -1) throw Error('Scene item not found!');
     const sceneItem = scene.items[sceneItemIndex];
@@ -228,19 +223,59 @@ class SceneModule extends BroadcasterServiceModule {
         throw Error(err.message);
       }
     }
-    this.observableState.next(state);
+    this.observableState.next(this.observableState.value);
     return updatedSceneItem;
   }
 
   async reorderItems(items: SceneItem[], sceneId?: string) {
+    const scene = this.getSceneWithFallback(sceneId);
+    scene.items = items;
+    this.observableState.next(this.observableState.value);
+    return items;
+  }
+
+  async selectItem(itemId?: number | string, sceneId?: string) {
+    const scene = this.getSceneWithFallback(sceneId);
+    const selectedItem = scene.items.find((item) => item.id === itemId);
+    if (scene.selectedItem?.id === selectedItem?.id) {
+      scene.selectedItem = undefined;
+    } else scene.selectedItem = selectedItem;
+    this.observableState.next(this.observableState.value);
+  }
+
+  async getItemWithDimensions(itemId?: number | string, sceneId?: string) {
+    const scene = this.getSceneWithFallback(sceneId);
+    let sceneItem = scene.items.find((item) => item.id === itemId);
+    if (!itemId && scene.selectedItem) {
+      sceneItem = scene.selectedItem;
+    }
+    if (!sceneItem) throw Error('scene item not found');
+    let width = 0;
+    let height = 0;
+    if (sceneItem.type === 'obs-source') {
+      const newObsSource = await this.source.get(sceneItem.sourceId);
+      width = newObsSource.width;
+      height = newObsSource.height;
+    }
+    if (sceneItem.type === 'browser-rendered') {
+      width = sceneItem.container.width;
+      height = sceneItem.container.height;
+    }
+
+    return {
+      ...sceneItem,
+      width,
+      height,
+    };
+  }
+
+  private getSceneWithFallback(sceneId?: string) {
     const state = this.observableState.getValue();
     const scene = state.scenes.find(
       ({ id }) => id === (sceneId || state.activeScene?.id)
     );
     if (!scene) throw Error('scene or activeScene not found');
-    scene.items = items;
-    this.observableState.next(state);
-    return items;
+    return scene;
   }
 
   registerIpcMethods() {
@@ -253,6 +288,8 @@ class SceneModule extends BroadcasterServiceModule {
       removeItem: this.removeItem.bind(this),
       transformItem: this.transformItem.bind(this),
       reorderItems: this.reorderItems.bind(this),
+      selectItem: this.selectItem.bind(this),
+      getItemWithDimensions: this.getItemWithDimensions.bind(this),
     };
   }
 }

@@ -27,11 +27,11 @@ class BroadcasterService {
     scenes: [],
   });
 
+  source: SourceModule;
+
   scene: SceneModule;
 
   display: DisplayModule;
-
-  source: SourceModule;
 
   element: ElementModule;
 
@@ -44,9 +44,9 @@ class BroadcasterService {
     /**
      * Modules initialization
      */
-    this.scene = new SceneModule(this.observableState);
+    this.source = new SourceModule(this.observableState);
+    this.scene = new SceneModule(this.observableState, this.source);
     this.display = new DisplayModule(windowHandle);
-    this.source = new SourceModule();
     this.element = new ElementModule();
   }
 
@@ -66,9 +66,9 @@ class BroadcasterService {
       /**
        * Register modules' IPC Methods
        */
+      source: new SourceModule().getIpcRendererMethods(),
       scene: new SceneModule().getIpcRendererMethods(),
       display: new DisplayModule().getIpcRendererMethods(),
-      source: new SourceModule().getIpcRendererMethods(),
       element: new ElementModule().getIpcRendererMethods(),
 
       subscribe: (cb: (state: BroadcasterServiceState) => void) => {

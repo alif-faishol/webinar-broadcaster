@@ -9,7 +9,7 @@ import { SceneItemTransformValues } from '../../services/broadcaster/types';
 import useKeyPress from '../hooks/useKeyPress';
 
 type ElementTransformerProps = {
-  containerSize: { width: number; height: number };
+  containerBounds: { width: number; height: number; x: number; y: number };
   item: SceneItemTransformValues & {
     width: number;
     height: number;
@@ -26,7 +26,7 @@ const IGNORE_MOVE_PX = 5;
 
 const ElementTransformer: FC<ElementTransformerProps> = ({
   item: itemProps,
-  containerSize,
+  containerBounds,
   onChange,
   onClose,
 }) => {
@@ -34,8 +34,8 @@ const ElementTransformer: FC<ElementTransformerProps> = ({
   const [item, setItem] = useState(itemProps);
   const [dragAxis, setDragAxis] = useState<'both' | 'x' | 'y'>('both');
 
-  const previewWidthScale = containerSize.width / PREVIEW_SCREEN_WIDTH;
-  const previewHeightScale = containerSize.height / PREVIEW_SCREEN_HEIGHT;
+  const previewWidthScale = containerBounds.width / PREVIEW_SCREEN_WIDTH;
+  const previewHeightScale = containerBounds.height / PREVIEW_SCREEN_HEIGHT;
 
   const scalerRef = useRef<Rnd>(null);
   const cropperRef = useRef<Rnd>(null);
@@ -155,112 +155,124 @@ const ElementTransformer: FC<ElementTransformerProps> = ({
     <>
       {/* eslint-disable-next-line */}
       <div
-        className="fixed inset-0"
+        className="fixed inset-0 z-10"
         onClick={() => onClose()}
       />
-      <Rnd
-        ref={scalerRef}
-        default={itemBounds}
-        onDragStop={handleMoveItem}
-        onDrag={(_event, { x, y }) => {
-          if (!shiftKeyPressed) {
-            setDragAxis('both');
-            return;
-          }
-          setDragAxis(
-            Math.abs(itemBounds.y - y) > Math.abs(itemBounds.x - x) ? 'y' : 'x'
-          );
+      <div
+        className="absolute"
+        style={{
+          left: containerBounds.x,
+          top: containerBounds.y,
+          width: containerBounds.width,
+          height: containerBounds.height,
         }}
-        enableResizing={!cropMode}
-        lockAspectRatio={shiftKeyPressed}
-        dragAxis={dragAxis}
-        onResizeStop={handleResizeItem}
-        className={[
-          'border bg-opacity-20 border-green-500',
-          cropMode ? '' : 'bg-green-500',
-        ].join(' ')}
       >
         <Rnd
-          ref={cropperRef}
-          key={`${item.scale.x}-${item.scale.y}-${cropMode}`}
-          default={itemCropBounds}
-          onResizeStop={handleCropItem}
+          ref={scalerRef}
+          default={itemBounds}
+          onDragStop={handleMoveItem}
+          onDrag={(_event, { x, y }) => {
+            if (!shiftKeyPressed) {
+              setDragAxis('both');
+              return;
+            }
+            setDragAxis(
+              Math.abs(itemBounds.y - y) > Math.abs(itemBounds.x - x)
+                ? 'y'
+                : 'x'
+            );
+          }}
+          enableResizing={!cropMode}
           lockAspectRatio={shiftKeyPressed}
-          bounds="parent"
+          dragAxis={dragAxis}
+          onResizeStop={handleResizeItem}
           className={[
-            scalerRef.current?.state.resizing
-              ? ''
-              : 'border bg-opacity-20 border-red-500 border-opacity-50',
-            cropMode ? 'bg-red-500' : '',
+            'border bg-opacity-20 border-green-500 z-10',
+            cropMode ? '' : 'bg-green-500',
           ].join(' ')}
-        />
-        <div className="absolute -right-16 flex flex-col border border-cool-gray-900 shadow-lg text-center text-xs">
-          <button
-            type="button"
+        >
+          <Rnd
+            ref={cropperRef}
+            key={`${item.scale.x}-${item.scale.y}-${cropMode}`}
+            default={itemCropBounds}
+            onResizeStop={handleCropItem}
+            lockAspectRatio={shiftKeyPressed}
+            bounds="parent"
             className={[
-              'w-12 h-12 border-b border-cool-gray-900',
-              cropMode
-                ? 'bg-cool-gray-900 text-white'
-                : 'bg-white text-cool-gray-900',
+              scalerRef.current?.state.resizing
+                ? ''
+                : 'border bg-opacity-20 border-red-500 border-opacity-50',
+              cropMode ? 'bg-red-500' : '',
             ].join(' ')}
-            onClick={() => setCropMode((ps) => !ps)}
-          >
-            <ScissorsIcon className="align-middle text-center w-full h-8" />
-          </button>
-          {cropMode && (
+          />
+          <div className="absolute -right-16 flex flex-col border border-cool-gray-900 shadow-lg text-center text-xs">
             <button
               type="button"
-              className="bg-white w-12 h-12"
-              onClick={() => {
-                setItem({
-                  ...item,
-                  position: {
-                    y: Math.max(item.position.y - item.crop.top, 0),
-                    x: Math.max(item.position.x - item.crop.left, 0),
-                  },
-                  crop: { right: 0, bottom: 0, left: 0, top: 0 },
-                });
-              }}
+              className={[
+                'w-12 h-12 border-b border-cool-gray-900',
+                cropMode
+                  ? 'bg-cool-gray-900 text-white'
+                  : 'bg-white text-cool-gray-900',
+              ].join(' ')}
+              onClick={() => setCropMode((ps) => !ps)}
             >
-              Reset
+              <ScissorsIcon className="align-middle text-center w-full h-8" />
             </button>
-          )}
-          {!cropMode && (
-            <>
-              <button
-                type="button"
-                className="bg-white w-12 h-12 border-b border-cool-gray-900"
-                onClick={() => {
-                  setItem({
-                    ...item,
-                    ...TransformUtils.fitInCanvas({
-                      width: item.width - item.crop.left - item.crop.right,
-                      height: item.height - item.crop.top - item.crop.bottom,
-                    }),
-                  });
-                }}
-              >
-                Fit
-              </button>
+            {cropMode && (
               <button
                 type="button"
                 className="bg-white w-12 h-12"
                 onClick={() => {
                   setItem({
                     ...item,
-                    ...TransformUtils.fillCanvas({
-                      width: item.width - item.crop.left - item.crop.right,
-                      height: item.height - item.crop.top - item.crop.bottom,
-                    }),
+                    position: {
+                      y: Math.max(item.position.y - item.crop.top, 0),
+                      x: Math.max(item.position.x - item.crop.left, 0),
+                    },
+                    crop: { right: 0, bottom: 0, left: 0, top: 0 },
                   });
                 }}
               >
-                Cover
+                Reset
               </button>
-            </>
-          )}
-        </div>
-      </Rnd>
+            )}
+            {!cropMode && (
+              <>
+                <button
+                  type="button"
+                  className="bg-white w-12 h-12 border-b border-cool-gray-900"
+                  onClick={() => {
+                    setItem({
+                      ...item,
+                      ...TransformUtils.fitInCanvas({
+                        width: item.width - item.crop.left - item.crop.right,
+                        height: item.height - item.crop.top - item.crop.bottom,
+                      }),
+                    });
+                  }}
+                >
+                  Fit
+                </button>
+                <button
+                  type="button"
+                  className="bg-white w-12 h-12"
+                  onClick={() => {
+                    setItem({
+                      ...item,
+                      ...TransformUtils.fillCanvas({
+                        width: item.width - item.crop.left - item.crop.right,
+                        height: item.height - item.crop.top - item.crop.bottom,
+                      }),
+                    });
+                  }}
+                >
+                  Cover
+                </button>
+              </>
+            )}
+          </div>
+        </Rnd>
+      </div>
     </>
   );
 };

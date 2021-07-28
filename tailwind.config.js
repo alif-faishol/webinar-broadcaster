@@ -1,6 +1,6 @@
-const windmill = require('@windmill/react-ui/config');
+const aspectRatioPlugin = require('@tailwindcss/aspect-ratio');
 
-module.exports = windmill({
+module.exports = {
   purge: ['./src/**/*.tsx'],
   mode: 'jit',
   darkMode: false, // or 'media' or 'class'
@@ -10,5 +10,8 @@ module.exports = windmill({
   variants: {
     extend: {},
   },
-  plugins: [],
-});
+  plugins: [aspectRatioPlugin],
+  corePlugins: {
+    preflight: false,
+  },
+};

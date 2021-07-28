@@ -1,35 +1,36 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { XIcon, SwitchVerticalIcon } from '@heroicons/react/solid';
 import { DraggableProvided } from 'react-beautiful-dnd';
+import { Card, Button, Input, Select, Form, Checkbox } from 'antd';
+import {
+  DeleteOutlined,
+  DragOutlined,
+  SettingOutlined,
+} from '@ant-design/icons';
 import {
   SceneItem,
-  SceneItemTransformValues,
   SerializableSource,
 } from '../../services/broadcaster/types';
 import BroadcasterService from '../../services/broadcaster';
+import useBroadcasterState from '../hooks/useBroadcasterState';
 
 type SceneItemConfiguratorProps = {
   sceneItem: SceneItem;
   onRemove: () => void;
-  onTransform: (
-    transformValues: SceneItemTransformValues & {
-      id: string | number;
-      width: number;
-      height: number;
-    }
-  ) => void;
   draggableProvided: DraggableProvided;
 };
+
+const OBS_QUICK_SETTINGS = ['url', 'monitor'];
 
 const broadcaster = BroadcasterService.getIpcRendererClient();
 
 const SceneItemConfigurator = ({
   sceneItem,
   onRemove,
-  onTransform,
   draggableProvided,
 }: SceneItemConfiguratorProps) => {
   const [obsSource, setObsSource] = useState<SerializableSource>();
+  const [advancedMode, setAdvancedMode] = useState(false);
+  const broadcasterState = useBroadcasterState();
 
   const loadObsSource = useCallback(async () => {
     if (sceneItem.type !== 'obs-source') return;
@@ -41,147 +42,193 @@ const SceneItemConfigurator = ({
     loadObsSource();
   }, [loadObsSource]);
 
+  console.log(obsSource);
+
   return (
-    <>
-      <div
-        ref={draggableProvided.innerRef}
-        {...draggableProvided.draggableProps}
-        className="border border-cool-gray-900 mb-2 bg-white"
-      >
-        <div className="flex" {...draggableProvided.dragHandleProps}>
-          <div className="bg-cool-gray-900 text-white px-2 text-center flex items-center">
-            <SwitchVerticalIcon className="align-middle w-6 h-6" />
-          </div>
-          <h4
-            className="flex-1 px-2 py-1 bg-cool-gray-900 text-white font-semibold truncate"
-            title={sceneItem.name}
-          >
-            {sceneItem.name}
-          </h4>
-          <button
-            type="button"
-            className="bg-red-800 text-white w-10 px-3"
-            onClick={() => onRemove()}
-          >
-            <XIcon />
-          </button>
-        </div>
-        <div className="px-2 py-1">
-          {sceneItem.type === 'browser-rendered' &&
-            sceneItem.variables &&
-            Object.entries(sceneItem.variables).map(([name, def]) => (
-              <>
-                {def.type === 'string' && (
-                  <label>
-                    {name}
-                    <input
-                      type="text"
-                      defaultValue={def.value}
-                      onChange={({ target: { value } }) => {
-                        if (!sceneItem.variables) return;
-                        sceneItem.variables[name].value = value;
-                        broadcaster.scene.setCustomItemVariables(
-                          sceneItem.id,
-                          sceneItem.variables
-                        );
-                      }}
-                    />
-                  </label>
-                )}
-                {def.type === 'boolean' && (
-                  <label>
-                    {name}
-                    <input
-                      type="checkbox"
-                      defaultChecked={!!def.value}
-                      onChange={({ target: { checked } }) => {
-                        if (!sceneItem.variables) return;
-                        sceneItem.variables[name].value = checked;
-                        broadcaster.scene.setCustomItemVariables(
-                          sceneItem.id,
-                          sceneItem.variables
-                        );
-                      }}
-                    />
-                  </label>
-                )}
-              </>
-            ))}
-          {obsSource && 'url' in obsSource.settings && (
-            <label htmlFor="url">
-              URL
-              <input
-                type="text"
-                name="url"
-                defaultValue={obsSource.settings.url}
-                onChange={async ({ target: { value } }) => {
-                  await broadcaster.source.setSettings(obsSource.id, {
-                    url: value,
-                  });
-                }}
-              />
-            </label>
-          )}
-          {obsSource?.properties.map((item) => {
-            if (item.type === 6)
-              return (
-                <label key={item.name}>
-                  {item.description}
-                  <select
-                    onChange={async ({ target: { value } }) => {
-                      if (item.details.format === 1) {
-                        await broadcaster.source.setSettings(obsSource.id, {
-                          [item.name]: parseInt(value, 10),
-                        });
-                      }
-                    }}
-                  >
-                    {Array.isArray(item.details?.items) &&
-                      item.details.items.map((opt) => (
-                        <option value={opt.value} key={opt.value}>
-                          {opt.name}
-                        </option>
-                      ))}
-                  </select>
-                </label>
-              );
-            return undefined;
-          })}
-          <div>
-            <button
-              type="button"
+    <div
+      ref={draggableProvided.innerRef}
+      {...draggableProvided.draggableProps}
+      className="mb-2"
+    >
+      <Card
+        onClick={async () => {
+          broadcaster.scene.selectItem(sceneItem.id);
+        }}
+        title={sceneItem.name}
+        size="small"
+        extra={
+          /* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */
+          <div onClick={(e) => e.stopPropagation()}>
+            <Button
+              type={
+                broadcasterState.activeScene?.selectedItem?.id === sceneItem.id
+                  ? 'primary'
+                  : 'link'
+              }
+              icon={<DragOutlined />}
+              title="transform"
               onClick={async () => {
-                let itemWidth = 0;
-                let itemHeight = 0;
-                if (sceneItem.type === 'obs-source') {
-                  const newObsSource = await broadcaster.source.get(
-                    sceneItem.sourceId
-                  );
-                  itemWidth = newObsSource.width;
-                  itemHeight = newObsSource.height;
-                }
-                if (sceneItem.type === 'browser-rendered') {
-                  itemWidth = sceneItem.container.width;
-                  itemHeight = sceneItem.container.height;
-                }
-                const itemToTransform = {
-                  id: sceneItem.id,
-                  crop: sceneItem.crop,
-                  position: sceneItem.position,
-                  rotation: sceneItem.rotation,
-                  scale: sceneItem.scale,
-                  width: itemWidth,
-                  height: itemHeight,
-                };
-                onTransform(itemToTransform);
+                broadcaster.scene.selectItem(sceneItem.id);
+              }}
+            />
+            <Button
+              type={advancedMode ? 'primary' : 'link'}
+              icon={<SettingOutlined />}
+              onClick={() => setAdvancedMode((ps) => !ps)}
+            />
+            <Button
+              type="link"
+              danger
+              icon={<DeleteOutlined onClick={onRemove} />}
+            />
+          </div>
+        }
+        {...draggableProvided.dragHandleProps}
+      >
+        {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
+        <div onClick={(e) => e.stopPropagation()}>
+          {sceneItem.type === 'browser-rendered' && sceneItem.variables && (
+            <Form
+              layout="vertical"
+              labelAlign="left"
+              initialValues={Object.entries(sceneItem.variables).reduce(
+                (obj, [name, def]) => ({ ...obj, [name]: def.value }),
+                {}
+              )}
+              onValuesChange={(values) => {
+                Object.entries(values).forEach(([name, value]) => {
+                  if (!sceneItem.variables) return;
+                  sceneItem.variables[name].value =
+                    value as typeof sceneItem.variables[0]['value'];
+                });
+                broadcaster.scene.setCustomItemVariables(
+                  sceneItem.id,
+                  sceneItem.variables
+                );
               }}
             >
-              transform
-            </button>
-          </div>
+              {Object.entries(sceneItem.variables)
+                .filter(
+                  ([, def]) => advancedMode || def.visibility === 'normal'
+                )
+                .map(([name, def], i, arr) => {
+                  if (def.type === 'string' || def.type === 'color')
+                    return (
+                      <Form.Item
+                        name={name}
+                        key={name}
+                        className={i === arr.length - 1 ? 'mb-0' : undefined}
+                      >
+                        <Input addonBefore={def.label} type="text" />
+                      </Form.Item>
+                    );
+                  if (def.type === 'boolean')
+                    return (
+                      <Form.Item
+                        name={name}
+                        key={name}
+                        valuePropName="checked"
+                        className={i === arr.length - 1 ? 'mb-0' : undefined}
+                      >
+                        <Checkbox>{def.label}</Checkbox>
+                      </Form.Item>
+                    );
+                  return null;
+                })}
+            </Form>
+          )}
+          {obsSource && (
+            <Form
+              layout="vertical"
+              labelAlign="left"
+              initialValues={obsSource.settings}
+              onValuesChange={(values) => {
+                broadcaster.source.setSettings(obsSource.id, values);
+              }}
+            >
+              {obsSource?.properties
+                .filter(
+                  (item) =>
+                    (advancedMode || OBS_QUICK_SETTINGS.includes(item.name)) &&
+                    item.visible
+                )
+                .map((item, i, arr) => {
+                  if (item.type === 1)
+                    return (
+                      <Form.Item
+                        name={item.name}
+                        key={item.name}
+                        valuePropName="checked"
+                        className={i === arr.length - 1 ? 'mb-0' : undefined}
+                      >
+                        <Checkbox>{item.description}</Checkbox>
+                      </Form.Item>
+                    );
+                  if (item.type === 2)
+                    return (
+                      <Form.Item
+                        name={item.name}
+                        key={item.name}
+                        className={i === arr.length - 1 ? 'mb-0' : undefined}
+                        normalize={(val) => parseInt(val, 10)}
+                      >
+                        <Input addonBefore={item.description} type="number" />
+                      </Form.Item>
+                    );
+                  if (item.type === 4)
+                    return (
+                      <Form.Item
+                        name={item.name}
+                        key={item.name}
+                        className={i === arr.length - 1 ? 'mb-0' : undefined}
+                      >
+                        <Input addonBefore={item.description} type="text" />
+                      </Form.Item>
+                    );
+                  if (item.type === 6 && Array.isArray(item.details?.items))
+                    return (
+                      <Form.Item
+                        label={item.description}
+                        name={item.name}
+                        key={item.name}
+                        className={i === arr.length - 1 ? 'mb-0' : undefined}
+                      >
+                        <Select className="w-full" value={item.value}>
+                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                          {item.details.items.map((opt: any) => (
+                            <Select.Option value={opt.value} key={opt.value}>
+                              {opt.name}
+                            </Select.Option>
+                          ))}
+                        </Select>
+                      </Form.Item>
+                    );
+                  if (item.type === 8)
+                    return (
+                      <Form.Item
+                        key={item.name}
+                        className={i === arr.length - 1 ? 'mb-0' : undefined}
+                      >
+                        <Button
+                          htmlType="button"
+                          onClick={() => {
+                            broadcaster.source.clickButton(
+                              obsSource.id,
+                              item.name
+                            );
+                          }}
+                        >
+                          {item.description}
+                        </Button>
+                      </Form.Item>
+                    );
+                  return null;
+                })}
+            </Form>
+          )}
         </div>
-      </div>
-    </>
+      </Card>
+    </div>
   );
 };
 

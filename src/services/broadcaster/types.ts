@@ -73,7 +73,10 @@ type ColorVariable = {
   value: string;
 };
 
-type Variable = { visibility: 'normal' | 'advanced-only' | 'hidden' } & (
+type Variable = {
+  visibility: 'normal' | 'advanced-only' | 'hidden';
+  label: string;
+} & (
   | StringVariable
   | EnumVariable
   | NumberVariable
@@ -133,6 +136,7 @@ export type Scene = {
   id: string;
   name: string;
   items: SceneItem[];
+  selectedItem?: SceneItem;
 };
 
 export type AppState = {

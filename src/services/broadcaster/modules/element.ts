@@ -27,6 +27,7 @@ const MetadataSchema = yup.object().shape({
         yup.object({
           type: yup.string().required(),
           visibility: yup.string().required(),
+          label: yup.string().required(),
         })
       )
     )
