@@ -9,6 +9,7 @@ import { Platform } from 'frameless-titlebar/dist/title-bar/typings';
 import Icon from '../../assets/icon.png';
 import MainScreen from './screens/MainScreen';
 import ModalScreen from './screens/ModalScreen';
+import { BroadcasterStateProvider } from './hooks/useBroadcasterState';
 
 export default function App() {
   const [maximized, setMaximized] = useState(false);
@@ -29,29 +30,31 @@ export default function App() {
   }, []);
   return (
     <JotaiProvider>
-      <div className="h-screen flex flex-col overflow-hidden">
-        <TitleBar
-          theme={{ bar: { background: '#1890ff', borderBottom: '#1890ff' } }}
-          iconSrc={Icon}
-          platform={process.platform as Platform}
-          title="Webinar Broadcaster"
-          onClose={() => ipcRenderer.send('close')}
-          onMinimize={() => ipcRenderer.send('minimize')}
-          onMaximize={() => ipcRenderer.send('toggle-maximize')}
-          onDoubleClick={() => ipcRenderer.send('toggle-maximize')}
-          disableMinimize={false}
-          disableMaximize={false}
-          maximized={maximized}
-        />
-        <ModalScreen />
-        <div className="flex-1 overflow-hidden">
-          <Router>
-            <Switch>
-              <Route exact path="/" component={MainScreen} />
-            </Switch>
-          </Router>
+      <BroadcasterStateProvider>
+        <div className="h-screen flex flex-col overflow-hidden">
+          <TitleBar
+            theme={{ bar: { background: '#1890ff', borderBottom: '#1890ff' } }}
+            iconSrc={Icon}
+            platform={process.platform as Platform}
+            title="Webinar Broadcaster"
+            onClose={() => ipcRenderer.send('close')}
+            onMinimize={() => ipcRenderer.send('minimize')}
+            onMaximize={() => ipcRenderer.send('toggle-maximize')}
+            onDoubleClick={() => ipcRenderer.send('toggle-maximize')}
+            disableMinimize={false}
+            disableMaximize={false}
+            maximized={maximized}
+          />
+          <ModalScreen />
+          <div className="flex-1 overflow-hidden">
+            <Router>
+              <Switch>
+                <Route exact path="/" component={MainScreen} />
+              </Switch>
+            </Router>
+          </div>
         </div>
-      </div>
+      </BroadcasterStateProvider>
     </JotaiProvider>
   );
 }

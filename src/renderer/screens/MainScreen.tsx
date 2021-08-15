@@ -1,5 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Typography, Layout, Tabs, Modal, Form, Input, Button } from 'antd';
+import {
+  Typography,
+  Layout,
+  Tabs,
+  Modal,
+  Form,
+  Input,
+  Button,
+  Empty,
+} from 'antd';
 import ElementsSidebar from '../components/ElementsSidebar';
 import ElementTransformer from '../components/ElementTransformer';
 import {
@@ -8,13 +17,14 @@ import {
 } from '../../services/broadcaster/types';
 import BroadcasterService from '../../services/broadcaster';
 import useBroadcasterState from '../hooks/useBroadcasterState';
+import BroadcasterDisplay, {
+  getDisplayBounds,
+} from '../components/BroadcasterDisplay';
 
 const broadcaster = BroadcasterService.getIpcRendererClient();
 
 const MainScreen = () => {
   const previewRef = useRef<HTMLDivElement>(null);
-  const previewInitializedRef = useRef<boolean>(false);
-
   const broadcasterState = useBroadcasterState();
 
   const [elementToTransform, setElementToTransform] = useState<
@@ -36,65 +46,6 @@ const MainScreen = () => {
     },
     [broadcasterState.activeScene]
   );
-
-  const getPreviewBounds = useCallback((scale = 1) => {
-    if (!previewRef.current)
-      return {
-        width: 0,
-        height: 0,
-        x: 0,
-        y: 0,
-      };
-    let { width, height, x, y } = previewRef.current.getBoundingClientRect();
-    if ((width / 16) * 9 > height) {
-      x += (width - (height / 9) * 16) / 2;
-      width = (height / 9) * 16;
-    } else {
-      y += (height - (width / 16) * 9) / 2;
-      height = (width / 16) * 9;
-    }
-    return {
-      width: width * scale,
-      height: height * scale,
-      x: x * scale,
-      y: y * scale,
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!previewRef.current) return undefined;
-    const previewId = 'output-preview';
-
-    const resizePreview = () => {
-      if (!previewInitializedRef.current) return;
-      broadcaster.display.resizePreview(
-        previewId,
-        getPreviewBounds(window.devicePixelRatio)
-      );
-    };
-
-    const mediaQueryList = matchMedia(
-      `(resolution: ${window.devicePixelRatio}dppx)`
-    );
-    mediaQueryList.addEventListener('change', resizePreview);
-    window.addEventListener('resize', resizePreview);
-
-    if (previewInitializedRef.current) return undefined;
-    broadcaster.display
-      .attachPreview(previewId, getPreviewBounds(window.devicePixelRatio))
-      .then(() => {
-        previewInitializedRef.current = true;
-        return undefined;
-      })
-      .catch(() => {
-        previewInitializedRef.current = false;
-      });
-
-    return () => {
-      mediaQueryList.removeEventListener('change', resizePreview);
-      window.removeEventListener('resize', resizePreview);
-    };
-  }, [getPreviewBounds]);
 
   useEffect(() => {
     if (!broadcasterState.activeScene?.selectedItem) {
@@ -142,23 +93,31 @@ const MainScreen = () => {
       </Layout.Content>
       <Layout className="bg-transparent">
         <Layout.Content>
-          <div ref={previewRef} className="border mx-auto w-full h-full">
-            {elementToTransform && (
-              <ElementTransformer
-                onClose={() => broadcaster.scene.selectItem()}
-                onChange={handleTransformElement}
-                item={elementToTransform}
-                containerBounds={getPreviewBounds()}
-              />
-            )}
-          </div>
+          {broadcasterState.activeScene ? (
+            <BroadcasterDisplay
+              className="border mx-auto w-full h-full"
+              windowHandle="background"
+              ref={previewRef}
+            >
+              {elementToTransform && (
+                <ElementTransformer
+                  onClose={() => broadcaster.scene.selectItem()}
+                  onChange={handleTransformElement}
+                  item={elementToTransform}
+                  containerBounds={getDisplayBounds(previewRef.current)}
+                />
+              )}
+            </BroadcasterDisplay>
+          ) : (
+            <Empty />
+          )}
         </Layout.Content>
         <Layout.Sider theme="light" width={384} className="pl-4">
           <ElementsSidebar activeScene={broadcasterState.activeScene} />
         </Layout.Sider>
       </Layout>
       <Modal
-        forceRender
+        destroyOnClose
         visible={addSceneModalOpen}
         footer={null}
         onCancel={() => setAddSceneModalOpen(false)}

@@ -145,7 +145,10 @@ const createWindow = async () => {
   });
   registerModalHandler(frontendWindow);
 
-  BroadcasterService.init(mainWindow.getNativeWindowHandle());
+  BroadcasterService.init({
+    foregroundWindow: frontendWindow.getNativeWindowHandle(),
+    backgroundWindow: mainWindow.getNativeWindowHandle(),
+  });
   await ElementRendererService.init();
 
   frontendWindow.loadURL(`file://${__dirname}/index.html`);

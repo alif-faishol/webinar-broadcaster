@@ -88,6 +88,7 @@ export type OBSItemTemplate = {
   type: 'obs-source';
   name: string;
   obsSourceType: string;
+  obsSourceId?: string;
 };
 
 export enum EAlignment {

@@ -50,6 +50,7 @@ class SourceModule extends BroadcasterServiceModule {
       (source.properties.get(buttonName) as osn.IButtonProperty).buttonClicked(
         source
       );
+      this.observableState.next(this.observableState.value);
     } catch (err) {
       throw Error(err.message);
     }

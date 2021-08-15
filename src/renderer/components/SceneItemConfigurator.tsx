@@ -19,7 +19,7 @@ type SceneItemConfiguratorProps = {
   draggableProvided: DraggableProvided;
 };
 
-const OBS_QUICK_SETTINGS = ['url', 'monitor'];
+const OBS_QUICK_SETTINGS = ['url', 'monitor', 'video_device_id'];
 
 const broadcaster = BroadcasterService.getIpcRendererClient();
 
@@ -193,7 +193,7 @@ const SceneItemConfigurator = ({
                         key={item.name}
                         className={i === arr.length - 1 ? 'mb-0' : undefined}
                       >
-                        <Select className="w-full" value={item.value}>
+                        <Select>
                           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                           {item.details.items.map((opt: any) => (
                             <Select.Option value={opt.value} key={opt.value}>

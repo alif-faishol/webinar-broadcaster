@@ -3,13 +3,19 @@ import BroadcasterServiceModule from './BroadcasterServiceModule';
 import { Bounds } from '../types';
 
 class DisplayService extends BroadcasterServiceModule {
-  private windowHandle: Buffer;
+  private windows: {
+    backgroundWindow: Buffer;
+    foregroundWindow: Buffer;
+  };
 
-  constructor(windowHandle?: Buffer) {
+  constructor(windows?: {
+    backgroundWindow: Buffer;
+    foregroundWindow: Buffer;
+  }) {
     super();
-    if (!windowHandle && process.type === 'browser')
-      throw Error('windowHandle is required!');
-    this.windowHandle = windowHandle as Buffer;
+    if (!windows && process.type === 'browser')
+      throw Error('windows is required!');
+    this.windows = windows as NonNullable<typeof windows>;
   }
 
   async resizePreview(previewId: string, bounds: Bounds) {
@@ -25,16 +31,25 @@ class DisplayService extends BroadcasterServiceModule {
     }
   }
 
-  async attachPreview(previewId: string, bounds: Bounds, sourceId?: string) {
+  async attachPreview(
+    previewId: string,
+    bounds: Bounds,
+    sourceId?: string,
+    window: 'background' | 'foreground' = 'background'
+  ) {
     try {
+      const windowHandle =
+        window === 'background'
+          ? this.windows.backgroundWindow
+          : this.windows.foregroundWindow;
       if (sourceId) {
         osn.NodeObs.OBS_content_createSourcePreviewDisplay(
-          this.windowHandle,
+          windowHandle,
           sourceId,
           previewId
         );
       } else {
-        osn.NodeObs.OBS_content_createDisplay(this.windowHandle, previewId, 0);
+        osn.NodeObs.OBS_content_createDisplay(windowHandle, previewId, 0);
       }
       osn.NodeObs.OBS_content_setShouldDrawUI(previewId, false);
       osn.NodeObs.OBS_content_setPaddingSize(previewId, 0);

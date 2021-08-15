@@ -14,8 +14,8 @@
     "postinstall": "yarn electron-rebuild"
   },
   "dependencies": {
-    "socket.io": "^4.1.2",
     "@heroicons/react": "^1.0.1",
-    "obs-studio-node": "https://obsstudionodes3.streamlabs.com/osn-0.15.14-release-win64.tar.gz"
+    "obs-studio-node": "file:..\\obs-studio-node\\build\\obs-studio-node-0.3.49-win64.tar.gz",
+    "socket.io": "^4.1.2"
   }
 }

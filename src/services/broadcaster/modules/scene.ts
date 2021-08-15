@@ -86,9 +86,16 @@ class SceneModule extends BroadcasterServiceModule {
       const osnScene = osn.SceneFactory.fromName(sceneId);
       osnScene.remove();
       const state = this.observableState.getValue();
+      const filteredScenes = state.scenes.filter(
+        (scene) => scene.id !== sceneId
+      );
       this.observableState.next({
         ...state,
-        scenes: state.scenes.filter((scene) => scene.id !== sceneId),
+        scenes: filteredScenes,
+        activeScene:
+          state.activeScene?.id === sceneId
+            ? filteredScenes[0]
+            : state.activeScene,
       });
     } catch (err) {
       throw Error(err.message);
@@ -130,18 +137,17 @@ class SceneModule extends BroadcasterServiceModule {
     }
     if (template.type === 'obs-source') {
       try {
-        const osnSource = osn.InputFactory.create(
-          template.obsSourceType,
-          uuid()
-        );
+        const osnSource = template.obsSourceId
+          ? osn.InputFactory.fromName(template.obsSourceId)
+          : osn.InputFactory.create(template.obsSourceType, uuid());
         const osnScene = osn.SceneFactory.fromName(scene.id);
         if (!osnScene) throw Error('scene not found in OBS');
         const osnSceneItem = osnScene.add(osnSource);
         try {
-          await backOff(async () => {
-            if (osnSource.width === 0) throw Error('Invalid Source: width = 0');
-            return SourceModule.serializeSource(osnSource);
-          });
+          // await backOff(async () => {
+          //   if (osnSource.width === 0) throw Error('Invalid Source: width = 0');
+          //   return SourceModule.serializeSource(osnSource);
+          // });
           const sceneItem = SceneModule.serializeSceneItem(osnSceneItem);
           scene.items = [{ ...sceneItem, ...template }, ...scene.items];
         } catch (err) {

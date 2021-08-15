@@ -9192,9 +9192,9 @@ object.values@^1.1.0, object.values@^1.1.1, object.values@^1.1.2, object.values@
     define-properties "^1.1.3"
     es-abstract "^1.18.2"
 
-"obs-studio-node@https://obsstudionodes3.streamlabs.com/osn-0.15.14-release-win64.tar.gz":
-  version "0.15.14"
-  resolved "https://obsstudionodes3.streamlabs.com/osn-0.15.14-release-win64.tar.gz#3338d41cabcef2efa516617df8f4ff234001ff47"
+"obs-studio-node@file:../obs-studio-node/build/obs-studio-node-0.3.49-win64.tar.gz":
+  version "0.3.99"
+  resolved "file:../obs-studio-node/build/obs-studio-node-0.3.49-win64.tar.gz#a5e359843fb2e500ebf342a669d986c7480a4cb6"
 
 obuf@^1.0.0, obuf@^1.1.2:
   version "1.1.2"

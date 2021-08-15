@@ -35,7 +35,7 @@ class BroadcasterService {
 
   element: ElementModule;
 
-  private constructor(windowHandle: Buffer) {
+  private constructor(windows: DisplayModule['windows']) {
     const initResult = this.initObs();
     if (initResult !== 0) throw Error('Failed to initialize OBS!');
 
@@ -46,7 +46,7 @@ class BroadcasterService {
      */
     this.source = new SourceModule(this.observableState);
     this.scene = new SceneModule(this.observableState, this.source);
-    this.display = new DisplayModule(windowHandle);
+    this.display = new DisplayModule(windows);
     this.element = new ElementModule();
   }
 
@@ -55,9 +55,9 @@ class BroadcasterService {
     return this.instance;
   }
 
-  static init(windowHandle: Buffer) {
+  static init(windows: DisplayModule['windows']) {
     if (this.instance) return;
-    this.instance = new BroadcasterService(windowHandle);
+    this.instance = new BroadcasterService(windows);
   }
 
   @processTypeIs('renderer')
