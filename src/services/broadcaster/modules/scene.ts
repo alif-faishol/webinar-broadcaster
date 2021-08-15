@@ -144,10 +144,6 @@ class SceneModule extends BroadcasterServiceModule {
         if (!osnScene) throw Error('scene not found in OBS');
         const osnSceneItem = osnScene.add(osnSource);
         try {
-          // await backOff(async () => {
-          //   if (osnSource.width === 0) throw Error('Invalid Source: width = 0');
-          //   return SourceModule.serializeSource(osnSource);
-          // });
           const sceneItem = SceneModule.serializeSceneItem(osnSceneItem);
           scene.items = [{ ...sceneItem, ...template }, ...scene.items];
         } catch (err) {

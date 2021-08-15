@@ -65,6 +65,16 @@ class SourceModule extends BroadcasterServiceModule {
     }
   }
 
+  async remove(sourceId: string) {
+    try {
+      const source = osn.InputFactory.fromName(sourceId);
+      source.release();
+      source.remove();
+    } catch (err) {
+      throw Error(err.message);
+    }
+  }
+
   static serializeSource(source: osn.IInput): SerializableSource {
     return {
       id: source.name,
@@ -115,6 +125,7 @@ class SourceModule extends BroadcasterServiceModule {
       create: this.create.bind(this),
       setSettings: this.setSettings.bind(this),
       get: this.get.bind(this),
+      remove: this.remove.bind(this),
       clickButton: this.clickButton.bind(this),
     };
   }

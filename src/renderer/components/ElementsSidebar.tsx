@@ -1,4 +1,4 @@
-import React, { FC, useCallback } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 import {
   DragDropContext,
   Droppable,
@@ -7,10 +7,10 @@ import {
 } from 'react-beautiful-dnd';
 import { Typography, Button } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import openModal from '../../services/modal/renderer';
 import { Scene } from '../../services/broadcaster/types';
 import SceneItemConfigurator from './SceneItemConfigurator';
 import BroadcasterService from '../../services/broadcaster';
+import AddElementModal from './AddElementModal';
 
 type ElementsSidebarProps = {
   activeScene?: Scene;
@@ -19,6 +19,8 @@ type ElementsSidebarProps = {
 const broadcaster = BroadcasterService.getIpcRendererClient();
 
 const ElementsSidebar: FC<ElementsSidebarProps> = ({ activeScene }) => {
+  const [addElementModalOpen, setAddElementModalOpen] = useState(false);
+
   const onDragEnd: OnDragEndResponder = useCallback(
     (result) => {
       if (!result.destination || !activeScene) return;
@@ -43,8 +45,7 @@ const ElementsSidebar: FC<ElementsSidebarProps> = ({ activeScene }) => {
             <Button
               type="primary"
               onClick={() => {
-                if (!activeScene) return;
-                openModal('add-item');
+                setAddElementModalOpen(true);
               }}
               icon={<PlusOutlined />}
             >
@@ -86,6 +87,10 @@ const ElementsSidebar: FC<ElementsSidebarProps> = ({ activeScene }) => {
           </Droppable>
         </DragDropContext>
       )}
+      <AddElementModal
+        visible={addElementModalOpen}
+        onCancel={() => setAddElementModalOpen(false)}
+      />
     </div>
   );
 };

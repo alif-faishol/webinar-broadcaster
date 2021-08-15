@@ -245,6 +245,7 @@
     "yarn-deduplicate": "^3.1.0"
   },
   "dependencies": {
+    "@alifaishol/use-async": "^1.1.1",
     "@ant-design/icons": "^4.6.2",
     "@headlessui/react": "^1.2.0",
     "@tailwindcss/aspect-ratio": "^0.2.1",

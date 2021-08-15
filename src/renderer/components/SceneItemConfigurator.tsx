@@ -12,14 +12,13 @@ import {
 } from '../../services/broadcaster/types';
 import BroadcasterService from '../../services/broadcaster';
 import useBroadcasterState from '../hooks/useBroadcasterState';
+import OBSSettingsForm from './OBSSettingsForm';
 
 type SceneItemConfiguratorProps = {
   sceneItem: SceneItem;
   onRemove: () => void;
   draggableProvided: DraggableProvided;
 };
-
-const OBS_QUICK_SETTINGS = ['url', 'monitor', 'video_device_id'];
 
 const broadcaster = BroadcasterService.getIpcRendererClient();
 
@@ -28,21 +27,8 @@ const SceneItemConfigurator = ({
   onRemove,
   draggableProvided,
 }: SceneItemConfiguratorProps) => {
-  const [obsSource, setObsSource] = useState<SerializableSource>();
   const [advancedMode, setAdvancedMode] = useState(false);
   const broadcasterState = useBroadcasterState();
-
-  const loadObsSource = useCallback(async () => {
-    if (sceneItem.type !== 'obs-source') return;
-    const newObsSource = await broadcaster.source.get(sceneItem.sourceId);
-    setObsSource(newObsSource);
-  }, [sceneItem]);
-
-  useEffect(() => {
-    loadObsSource();
-  }, [loadObsSource]);
-
-  console.log(obsSource);
 
   return (
     <div
@@ -137,94 +123,11 @@ const SceneItemConfigurator = ({
                 })}
             </Form>
           )}
-          {obsSource && (
-            <Form
-              layout="vertical"
-              labelAlign="left"
-              initialValues={obsSource.settings}
-              onValuesChange={(values) => {
-                broadcaster.source.setSettings(obsSource.id, values);
-              }}
-            >
-              {obsSource?.properties
-                .filter(
-                  (item) =>
-                    (advancedMode || OBS_QUICK_SETTINGS.includes(item.name)) &&
-                    item.visible
-                )
-                .map((item, i, arr) => {
-                  if (item.type === 1)
-                    return (
-                      <Form.Item
-                        name={item.name}
-                        key={item.name}
-                        valuePropName="checked"
-                        className={i === arr.length - 1 ? 'mb-0' : undefined}
-                      >
-                        <Checkbox>{item.description}</Checkbox>
-                      </Form.Item>
-                    );
-                  if (item.type === 2)
-                    return (
-                      <Form.Item
-                        name={item.name}
-                        key={item.name}
-                        className={i === arr.length - 1 ? 'mb-0' : undefined}
-                        normalize={(val) => parseInt(val, 10)}
-                      >
-                        <Input addonBefore={item.description} type="number" />
-                      </Form.Item>
-                    );
-                  if (item.type === 4)
-                    return (
-                      <Form.Item
-                        name={item.name}
-                        key={item.name}
-                        className={i === arr.length - 1 ? 'mb-0' : undefined}
-                      >
-                        <Input addonBefore={item.description} type="text" />
-                      </Form.Item>
-                    );
-                  if (item.type === 6 && Array.isArray(item.details?.items))
-                    return (
-                      <Form.Item
-                        label={item.description}
-                        name={item.name}
-                        key={item.name}
-                        className={i === arr.length - 1 ? 'mb-0' : undefined}
-                      >
-                        <Select>
-                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                          {item.details.items.map((opt: any) => (
-                            <Select.Option value={opt.value} key={opt.value}>
-                              {opt.name}
-                            </Select.Option>
-                          ))}
-                        </Select>
-                      </Form.Item>
-                    );
-                  if (item.type === 8)
-                    return (
-                      <Form.Item
-                        key={item.name}
-                        className={i === arr.length - 1 ? 'mb-0' : undefined}
-                      >
-                        <Button
-                          htmlType="button"
-                          onClick={() => {
-                            broadcaster.source.clickButton(
-                              obsSource.id,
-                              item.name
-                            );
-                          }}
-                        >
-                          {item.description}
-                        </Button>
-                      </Form.Item>
-                    );
-                  return null;
-                })}
-            </Form>
+          {sceneItem.type === 'obs-source' && (
+            <OBSSettingsForm
+              sourceId={sceneItem.sourceId}
+              advancedMode={advancedMode}
+            />
           )}
         </div>
       </Card>

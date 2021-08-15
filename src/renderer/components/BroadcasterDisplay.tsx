@@ -58,19 +58,29 @@ const BroadcasterDisplay = (
     if (!displayRef.current) return undefined;
     const previewId = Math.random().toString();
 
-    const resizePreview = () => {
+    let rafId: number;
+    let lastBounds = getDisplayBounds(
+      displayRef.current,
+      window.devicePixelRatio
+    );
+
+    const resizePreview: FrameRequestCallback = () => {
       if (!displayRef.current) return;
-      broadcaster.display.resizePreview(
-        previewId,
-        getDisplayBounds(displayRef.current, window.devicePixelRatio)
+      const newBounds = getDisplayBounds(
+        displayRef.current,
+        window.devicePixelRatio
       );
+      if (
+        newBounds.height + newBounds.width + newBounds.x + newBounds.y !==
+        lastBounds.height + lastBounds.width + lastBounds.x + lastBounds.y
+      ) {
+        broadcaster.display.resizePreview(previewId, newBounds);
+        lastBounds = newBounds;
+      }
+      rafId = window.requestAnimationFrame(resizePreview);
     };
 
-    const mediaQueryList = matchMedia(
-      `(resolution: ${window.devicePixelRatio}dppx)`
-    );
-    mediaQueryList.addEventListener('change', resizePreview);
-    window.addEventListener('resize', resizePreview);
+    rafId = window.requestAnimationFrame(resizePreview);
 
     broadcaster.display.attachPreview(
       previewId,
@@ -80,8 +90,7 @@ const BroadcasterDisplay = (
     );
 
     return () => {
-      mediaQueryList.removeEventListener('change', resizePreview);
-      window.removeEventListener('resize', resizePreview);
+      window.cancelAnimationFrame(rafId);
       broadcaster.display.detachPreview(previewId);
     };
   }, [sourceId, windowHandle]);
