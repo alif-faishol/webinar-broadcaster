@@ -18,6 +18,7 @@ import {
 } from '@ant-design/icons';
 import useAsync from '@alifaishol/use-async';
 import { Mutex } from 'async-mutex';
+import { RefSelectProps } from 'antd/lib/select';
 import BroadcasterService from '../../services/broadcaster';
 import {
   CustomItem,
@@ -42,6 +43,7 @@ const ModalContent: FC<{
   const broadcasterState = useBroadcasterState();
   const [name, setName] = useState('');
   const mutexRef = useRef(new Mutex());
+  const customElementSelectRef = useRef<RefSelectProps>(null);
   const [obsPreviewSourceId, setObsPreviewSourceId] = useState<string>();
   const [customElementPreview, setCustomElementPreview] =
     useState<CustomItem>();
@@ -137,10 +139,35 @@ const ModalContent: FC<{
     <div className="flex h-96">
       <div className="w-80 mr-4 overflow-auto">
         <label className="block mb-4">
-          <div className="pb-2">Name</div>
-          <Input value={name} onChange={(e) => setName(e.target.value)} />
+          <div className="pb-2">Custom Element</div>
+          <Select
+            loading={loadTemplatesState.loading}
+            showSearch
+            value=""
+            className="w-full"
+            placeholder="Search Element..."
+            onSelect={(index: number | string) => {
+              if (typeof index === 'string') return;
+              const template = loadTemplatesState.data?.templates[index];
+              if (!template) return;
+              setSelectedTemplate(template);
+            }}
+            filterOption={(input, option) =>
+              option?.children?.toLowerCase().indexOf(input.toLowerCase()) >= 0
+            }
+          >
+            <Select.Option value="" disabled>
+              Search Element...
+            </Select.Option>
+            {loadTemplatesState.data?.templates.map((template, index) => (
+              // eslint-disable-next-line react/no-array-index-key
+              <Select.Option key={index} value={index}>
+                {template.name}
+              </Select.Option>
+            ))}
+          </Select>
         </label>
-        <div className="flex mb-4">
+        <div className="flex">
           <Button
             type="primary"
             className="flex-1 mr-2"
@@ -222,24 +249,6 @@ const ModalContent: FC<{
             </Button>
           </Dropdown>
         </div>
-        <Select
-          loading={loadTemplatesState.loading}
-          showSearch
-          className="w-full"
-          placeholder="Search Element..."
-          onSelect={(index: number) => {
-            const template = loadTemplatesState.data?.templates[index];
-            if (!template) return;
-            setSelectedTemplate(template);
-          }}
-        >
-          {loadTemplatesState.data?.templates.map((template, index) => (
-            // eslint-disable-next-line react/no-array-index-key
-            <Select.Option key={index} value={index}>
-              {template.name}
-            </Select.Option>
-          ))}
-        </Select>
         <Divider />
         {/* eslint-disable-next-line no-nested-ternary */}
         {obsPreviewSourceId ? (
@@ -255,32 +264,41 @@ const ModalContent: FC<{
         ) : undefined}
       </div>
       <div className="flex-1 flex flex-col justify-between">
-        {/* eslint-disable-next-line no-nested-ternary */}
-        {obsPreviewSourceId ? (
-          <BroadcasterDisplay className="h-48" sourceId={obsPreviewSourceId} />
-        ) : customElementPreview ? (
-          <div
-            style={{
-              width: PREVIEW_SCREEN_WIDTH * 0.175,
-              height: PREVIEW_SCREEN_HEIGHT * 0.175,
-              background: 'black',
-            }}
-          >
+        <div>
+          <label className="block mb-4">
+            <div className="pb-2">Name</div>
+            <Input value={name} onChange={(e) => setName(e.target.value)} />
+          </label>
+          {/* eslint-disable-next-line no-nested-ternary */}
+          {obsPreviewSourceId ? (
+            <BroadcasterDisplay
+              className="h-48"
+              sourceId={obsPreviewSourceId}
+            />
+          ) : customElementPreview ? (
             <div
               style={{
-                transform: 'scale(0.175)',
-                transformOrigin: 'top left',
-                position: 'relative',
-                width: PREVIEW_SCREEN_WIDTH,
-                height: PREVIEW_SCREEN_HEIGHT,
+                width: PREVIEW_SCREEN_WIDTH * 0.175,
+                height: PREVIEW_SCREEN_HEIGHT * 0.175,
+                background: 'black',
               }}
             >
-              <CustomElementComponent item={customElementPreview} />
+              <div
+                style={{
+                  transform: 'scale(0.175)',
+                  transformOrigin: 'top left',
+                  position: 'relative',
+                  width: PREVIEW_SCREEN_WIDTH,
+                  height: PREVIEW_SCREEN_HEIGHT,
+                }}
+              >
+                <CustomElementComponent item={customElementPreview} />
+              </div>
             </div>
-          </div>
-        ) : (
-          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Preview" />
-        )}
+          ) : (
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Preview" />
+          )}
+        </div>
         <div className="text-right mt-4">
           <Button onClick={onCancel} className="mr-2">
             Cancel
