@@ -1,18 +1,16 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { DraggableProvided } from 'react-beautiful-dnd';
-import { Card, Button, Input, Select, Form, Checkbox } from 'antd';
+import { Card, Button } from 'antd';
 import {
   DeleteOutlined,
   DragOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
-import {
-  SceneItem,
-  SerializableSource,
-} from '../../services/broadcaster/types';
+import { SceneItem } from '../../services/broadcaster/types';
 import BroadcasterService from '../../services/broadcaster';
 import useBroadcasterState from '../hooks/useBroadcasterState';
 import OBSSettingsForm from './OBSSettingsForm';
+import CustomElementSettingsForm from './CustomElementSettingsForm';
 
 type SceneItemConfiguratorProps = {
   sceneItem: SceneItem;
@@ -73,55 +71,11 @@ const SceneItemConfigurator = ({
       >
         {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
         <div onClick={(e) => e.stopPropagation()}>
-          {sceneItem.type === 'browser-rendered' && sceneItem.variables && (
-            <Form
-              layout="vertical"
-              labelAlign="left"
-              initialValues={Object.entries(sceneItem.variables).reduce(
-                (obj, [name, def]) => ({ ...obj, [name]: def.value }),
-                {}
-              )}
-              onValuesChange={(values) => {
-                Object.entries(values).forEach(([name, value]) => {
-                  if (!sceneItem.variables) return;
-                  sceneItem.variables[name].value =
-                    value as typeof sceneItem.variables[0]['value'];
-                });
-                broadcaster.scene.setCustomItemVariables(
-                  sceneItem.id,
-                  sceneItem.variables
-                );
-              }}
-            >
-              {Object.entries(sceneItem.variables)
-                .filter(
-                  ([, def]) => advancedMode || def.visibility === 'normal'
-                )
-                .map(([name, def], i, arr) => {
-                  if (def.type === 'string' || def.type === 'color')
-                    return (
-                      <Form.Item
-                        name={name}
-                        key={name}
-                        className={i === arr.length - 1 ? 'mb-0' : undefined}
-                      >
-                        <Input addonBefore={def.label} type="text" />
-                      </Form.Item>
-                    );
-                  if (def.type === 'boolean')
-                    return (
-                      <Form.Item
-                        name={name}
-                        key={name}
-                        valuePropName="checked"
-                        className={i === arr.length - 1 ? 'mb-0' : undefined}
-                      >
-                        <Checkbox>{def.label}</Checkbox>
-                      </Form.Item>
-                    );
-                  return null;
-                })}
-            </Form>
+          {sceneItem.type === 'browser-rendered' && (
+            <CustomElementSettingsForm
+              item={sceneItem}
+              advancedMode={advancedMode}
+            />
           )}
           {sceneItem.type === 'obs-source' && (
             <OBSSettingsForm

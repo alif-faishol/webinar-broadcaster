@@ -13,6 +13,7 @@ import { processTypeIs } from './utils/decorator';
 export type BroadcasterServiceState = {
   scenes: Scene[];
   activeScene?: Scene;
+  elementRendererPort?: number;
 };
 
 class BroadcasterService {
