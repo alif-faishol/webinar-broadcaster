@@ -8,7 +8,6 @@ import TitleBar from 'frameless-titlebar';
 import { Platform } from 'frameless-titlebar/dist/title-bar/typings';
 import Icon from '../../assets/icon.png';
 import MainScreen from './screens/MainScreen';
-import ModalScreen from './screens/ModalScreen';
 import { BroadcasterStateProvider } from './hooks/useBroadcasterState';
 
 export default function App() {
@@ -45,7 +44,6 @@ export default function App() {
             disableMaximize={false}
             maximized={maximized}
           />
-          <ModalScreen />
           <div className="flex-1 overflow-hidden">
             <Router>
               <Switch>

@@ -77,9 +77,6 @@ const MainScreen = () => {
           onEdit={async (targetKey, action) => {
             if (action === 'add') {
               setAddSceneModalOpen(true);
-              // const sceneName = await openModal('add-scene');
-              // if (!sceneName) return;
-              // broadcaster.scene.add(sceneName);
             }
             if (action === 'remove' && typeof targetKey === 'string') {
               broadcaster.scene.remove(targetKey);

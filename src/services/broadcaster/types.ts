@@ -104,6 +104,7 @@ export enum EAlignment {
 
 export type CustomItemTemplate = {
   name: string;
+  templateId: string;
   author: string;
   version: string;
   type: 'browser-rendered';

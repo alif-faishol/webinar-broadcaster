@@ -18,7 +18,6 @@ import installExtensions, {
   REACT_DEVELOPER_TOOLS,
 } from 'electron-devtools-installer';
 import MenuBuilder from './menu';
-import registerModalHandler from './services/modal/main';
 import ElementRendererService from './services/element-renderer/ElementRendererService';
 import BroadcasterService from './services/broadcaster';
 
@@ -143,7 +142,6 @@ const createWindow = async () => {
     frontendWindow.focus();
     mainWindow.setBounds(frontendWindow.getContentBounds());
   });
-  registerModalHandler(frontendWindow);
 
   BroadcasterService.init({
     foregroundWindow: frontendWindow.getNativeWindowHandle(),

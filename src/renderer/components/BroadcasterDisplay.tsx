@@ -1,3 +1,4 @@
+import { message } from 'antd';
 import React, {
   forwardRef,
   HTMLAttributes,
@@ -80,14 +81,18 @@ const BroadcasterDisplay = (
       rafId = window.requestAnimationFrame(resizePreview);
     };
 
-    rafId = window.requestAnimationFrame(resizePreview);
-
-    broadcaster.display.attachPreview(
-      previewId,
-      getDisplayBounds(displayRef.current, window.devicePixelRatio),
-      sourceId,
-      windowHandle
-    );
+    broadcaster.display
+      .attachPreview(
+        previewId,
+        getDisplayBounds(displayRef.current, window.devicePixelRatio),
+        sourceId,
+        windowHandle
+      )
+      .then(() => {
+        rafId = window.requestAnimationFrame(resizePreview);
+        return undefined;
+      })
+      .catch((err) => message.error(err.message));
 
     return () => {
       window.cancelAnimationFrame(rafId);

@@ -13,6 +13,7 @@ const exists = util.promisify(fs.exists);
 
 const MetadataSchema = yup.object().shape({
   name: yup.string().required(),
+  templateId: yup.string().required(),
   author: yup.string().required(),
   version: yup.string().required(),
   container: yup.object().shape({

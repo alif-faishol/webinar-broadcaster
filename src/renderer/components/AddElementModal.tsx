@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useState } from 'react';
+import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 import {
   ModalProps,
   Modal,
@@ -17,6 +17,7 @@ import {
   VideoCameraOutlined,
 } from '@ant-design/icons';
 import useAsync from '@alifaishol/use-async';
+import { Mutex } from 'async-mutex';
 import BroadcasterService from '../../services/broadcaster';
 import {
   CustomItemTemplate,
@@ -31,22 +32,24 @@ const ModalContent: FC<{
   onCancel?: () => void;
 }> = ({ onCancel }) => {
   const [name, setName] = useState('');
+  const mutexRef = useRef(new Mutex());
+  const [obsPreviewSourceId, setObsPreviewSourceId] = useState<string>();
+  const obsPreviewSourceIdRef = useRef(obsPreviewSourceId);
   const { exec: loadTemplatesExec, state: loadTemplatesState } = useAsync(
     broadcaster.element.loadTemplates
   );
-  const {
-    exec: createPreview,
-    state: previewState,
-    setData: setPreviewData,
-  } = useAsync(broadcaster.source.create);
   const [selectedTemplate, setSelectedTemplate] = useState<
     CustomItemTemplate | OBSItemTemplate
   >();
 
   const onAddElement = useCallback(async () => {
     if (!selectedTemplate) return;
-    if (selectedTemplate.type === 'obs-source' && previewState.data?.id) {
-      selectedTemplate.obsSourceId = previewState.data.id;
+    if (
+      selectedTemplate.type === 'obs-source' &&
+      obsPreviewSourceIdRef.current
+    ) {
+      selectedTemplate.obsSourceId = obsPreviewSourceIdRef.current;
+      obsPreviewSourceIdRef.current = undefined;
     }
     try {
       await broadcaster.scene.addItem({
@@ -57,7 +60,7 @@ const ModalContent: FC<{
     } catch (err) {
       message.error(err.message);
     }
-  }, [name, previewState, selectedTemplate, onCancel]);
+  }, [name, selectedTemplate, onCancel]);
 
   useEffect(() => {
     loadTemplatesExec();
@@ -65,20 +68,38 @@ const ModalContent: FC<{
 
   useEffect(() => {
     setName(selectedTemplate?.name ?? '');
+    mutexRef.current.runExclusive(async () => {
+      try {
+        // Cleanup previous source preview
+        if (obsPreviewSourceIdRef.current) {
+          await broadcaster.source.remove(obsPreviewSourceIdRef.current);
+          obsPreviewSourceIdRef.current = undefined;
+        }
+
+        if (!selectedTemplate || selectedTemplate.type !== 'obs-source') {
+          setObsPreviewSourceId(undefined);
+          return;
+        }
+
+        const source = await broadcaster.source.create(
+          selectedTemplate.obsSourceType
+        );
+        obsPreviewSourceIdRef.current = source.id;
+        setObsPreviewSourceId(source.id);
+      } catch (err) {
+        message.error(err.message);
+      }
+    });
   }, [selectedTemplate]);
 
+  // Cleanup before unmount
   useEffect(() => {
-    if (!selectedTemplate || selectedTemplate.type !== 'obs-source')
-      return undefined;
-
-    createPreview(selectedTemplate.obsSourceType);
     return () => {
-      const sourceId = previewState.data?.id;
-      if (sourceId) broadcaster.source.remove(sourceId);
-      setPreviewData(undefined);
+      if (obsPreviewSourceIdRef.current) {
+        broadcaster.source.remove(obsPreviewSourceIdRef.current);
+      }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTemplate, setPreviewData, createPreview]);
+  }, []);
 
   return (
     <div className="flex h-96">
@@ -93,18 +114,20 @@ const ModalContent: FC<{
             className="flex-1 mr-2"
             icon={<VideoCameraOutlined />}
             onClick={() => {
-              setSelectedTemplate((ps) => {
-                if (
-                  ps?.type === 'obs-source' &&
-                  ps.obsSourceType === 'dshow_input'
-                ) {
-                  return undefined;
-                }
-                return {
-                  type: 'obs-source',
-                  obsSourceType: 'dshow_input',
-                  name: 'Webcam',
-                };
+              mutexRef.current.runExclusive(() => {
+                setSelectedTemplate((ps) => {
+                  if (
+                    ps?.type === 'obs-source' &&
+                    ps.obsSourceType === 'dshow_input'
+                  ) {
+                    return undefined;
+                  }
+                  return {
+                    type: 'obs-source',
+                    obsSourceType: 'dshow_input',
+                    name: 'Webcam',
+                  };
+                });
               });
             }}
           >
@@ -115,18 +138,20 @@ const ModalContent: FC<{
               <Menu>
                 <Menu.Item
                   onClick={() => {
-                    setSelectedTemplate((ps) => {
-                      if (
-                        ps?.type === 'obs-source' &&
-                        ps.obsSourceType === 'monitor_capture'
-                      ) {
-                        return undefined;
-                      }
-                      return {
-                        type: 'obs-source',
-                        obsSourceType: 'monitor_capture',
-                        name: 'Desktop Capture',
-                      };
+                    mutexRef.current.runExclusive(() => {
+                      setSelectedTemplate((ps) => {
+                        if (
+                          ps?.type === 'obs-source' &&
+                          ps.obsSourceType === 'monitor_capture'
+                        ) {
+                          return undefined;
+                        }
+                        return {
+                          type: 'obs-source',
+                          obsSourceType: 'monitor_capture',
+                          name: 'Desktop Capture',
+                        };
+                      });
                     });
                   }}
                 >
@@ -134,18 +159,20 @@ const ModalContent: FC<{
                 </Menu.Item>
                 <Menu.Item
                   onClick={() => {
-                    setSelectedTemplate((ps) => {
-                      if (
-                        ps?.type === 'obs-source' &&
-                        ps.obsSourceType === 'window_capture'
-                      ) {
-                        return undefined;
-                      }
-                      return {
-                        type: 'obs-source',
-                        obsSourceType: 'window_capture',
-                        name: 'Window Capture',
-                      };
+                    mutexRef.current.runExclusive(() => {
+                      setSelectedTemplate((ps) => {
+                        if (
+                          ps?.type === 'obs-source' &&
+                          ps.obsSourceType === 'window_capture'
+                        ) {
+                          return undefined;
+                        }
+                        return {
+                          type: 'obs-source',
+                          obsSourceType: 'window_capture',
+                          name: 'Window Capture',
+                        };
+                      });
                     });
                   }}
                 >
@@ -182,16 +209,13 @@ const ModalContent: FC<{
           ))}
         </Select>
         <Divider />
-        {previewState.data?.id && (
-          <OBSSettingsForm sourceId={previewState.data.id} advancedMode />
+        {obsPreviewSourceId && (
+          <OBSSettingsForm sourceId={obsPreviewSourceId} advancedMode />
         )}
       </div>
       <div className="flex-1 flex flex-col justify-between">
-        {previewState.data?.id ? (
-          <BroadcasterDisplay
-            className="h-48"
-            sourceId={previewState.data?.id}
-          />
+        {obsPreviewSourceId ? (
+          <BroadcasterDisplay className="h-48" sourceId={obsPreviewSourceId} />
         ) : (
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Preview" />
         )}
