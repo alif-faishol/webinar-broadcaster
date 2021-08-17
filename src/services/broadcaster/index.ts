@@ -9,6 +9,7 @@ import DisplayModule from './modules/display';
 import SourceModule from './modules/source';
 import ElementModule from './modules/element';
 import { processTypeIs } from './utils/decorator';
+import AudioModule from './modules/audio';
 
 export type BroadcasterServiceState = {
   scenes: Scene[];
@@ -30,6 +31,8 @@ class BroadcasterService {
 
   source: SourceModule;
 
+  audio: AudioModule;
+
   scene: SceneModule;
 
   display: DisplayModule;
@@ -39,6 +42,10 @@ class BroadcasterService {
   private constructor(windows: DisplayModule['windows']) {
     const initResult = this.initObs();
     if (initResult !== 0) throw Error('Failed to initialize OBS!');
+    osn.NodeObs.OBS_service_connectOutputSignals((signalInfo) => {
+      console.log('OBS signal', signalInfo);
+    });
+    osn.NodeObs.RegisterSourceCallback(() => {});
 
     this.initStateSubscriptionHandler();
 
@@ -46,7 +53,8 @@ class BroadcasterService {
      * Modules initialization
      */
     this.source = new SourceModule(this.observableState);
-    this.scene = new SceneModule(this.observableState, this.source);
+    this.audio = new AudioModule(this.observableState);
+    this.scene = new SceneModule(this.observableState, this.source, this.audio);
     this.display = new DisplayModule(windows);
     this.element = new ElementModule();
   }
@@ -61,13 +69,18 @@ class BroadcasterService {
     this.instance = new BroadcasterService(windows);
   }
 
+  static ipcRendererClient: ReturnType<
+    typeof BroadcasterService.initIpcRendererClient
+  >;
+
   @processTypeIs('renderer')
-  static getIpcRendererClient() {
+  static initIpcRendererClient() {
     return {
       /**
        * Register modules' IPC Methods
        */
       source: new SourceModule().getIpcRendererMethods(),
+      audio: new AudioModule().getIpcRendererMethods(),
       scene: new SceneModule().getIpcRendererMethods(),
       display: new DisplayModule().getIpcRendererMethods(),
       element: new ElementModule().getIpcRendererMethods(),
@@ -87,6 +100,13 @@ class BroadcasterService {
         };
       },
     };
+  }
+
+  @processTypeIs('renderer')
+  static getIpcRendererClient() {
+    if (!this.ipcRendererClient)
+      this.ipcRendererClient = this.initIpcRendererClient();
+    return this.ipcRendererClient;
   }
 
   private initStateSubscriptionHandler() {

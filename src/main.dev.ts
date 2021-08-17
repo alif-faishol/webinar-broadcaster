@@ -49,7 +49,8 @@ const createWindow = async () => {
     process.env.DEBUG_PROD === 'true'
   ) {
     await installExtensions([REACT_DEVELOPER_TOOLS], {
-      forceDownload: true,
+      forceDownload: false,
+      loadExtensionOptions: { allowFileAccess: true },
     }).catch((err) => console.log(err));
   }
 

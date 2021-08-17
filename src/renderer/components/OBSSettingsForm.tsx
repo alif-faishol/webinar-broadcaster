@@ -1,11 +1,13 @@
-import { Form, Button, Checkbox, Input, Select } from 'antd';
-import React, { FC, useCallback, useEffect, useState } from 'react';
+import { Form, Button, Checkbox, Input, Select, FormInstance } from 'antd';
+import { Mutex } from 'async-mutex';
+import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 import BroadcasterService from '../../services/broadcaster';
 import { SerializableSource } from '../../services/broadcaster/types';
 
 type OBSSettingsFormProps = {
   advancedMode?: boolean;
   sourceId: string;
+  allowedSettingsId?: string[];
 };
 
 const OBS_QUICK_SETTINGS = ['url', 'monitor', 'video_device_id', 'window'];
@@ -15,7 +17,10 @@ const broadcaster = BroadcasterService.getIpcRendererClient();
 const OBSSettingsForm: FC<OBSSettingsFormProps> = ({
   advancedMode = false,
   sourceId,
+  allowedSettingsId = OBS_QUICK_SETTINGS,
 }) => {
+  const formRef = useRef<FormInstance>(null);
+  const mutex = useRef(new Mutex());
   const [obsSource, setObsSource] = useState<SerializableSource>();
 
   const loadObsSource = useCallback(async () => {
@@ -27,23 +32,44 @@ const OBSSettingsForm: FC<OBSSettingsFormProps> = ({
     loadObsSource();
   }, [loadObsSource]);
 
+  const onValuesChange = useCallback(
+    (values) => {
+      mutex.current.runExclusive(async () => {
+        if (!obsSource) return;
+        await broadcaster.source.setSettings(obsSource.id, values);
+        await loadObsSource();
+      });
+    },
+    [obsSource, loadObsSource]
+  );
+
+  const onButtonClick = useCallback(
+    (name) => {
+      mutex.current.runExclusive(async () => {
+        if (!obsSource) return;
+        await broadcaster.source.clickButton(obsSource.id, name);
+        await loadObsSource();
+      });
+    },
+    [obsSource, loadObsSource]
+  );
+
   console.log(obsSource);
 
   if (!obsSource) return null;
 
   return (
     <Form
+      ref={formRef}
       layout="vertical"
       labelAlign="left"
       initialValues={obsSource.settings}
-      onValuesChange={(values) => {
-        broadcaster.source.setSettings(obsSource.id, values);
-      }}
+      onValuesChange={onValuesChange}
     >
       {obsSource?.properties
         .filter(
           (item) =>
-            (advancedMode || OBS_QUICK_SETTINGS.includes(item.name)) &&
+            (advancedMode || allowedSettingsId.includes(item.name)) &&
             item.visible
         )
         .map((item, i, arr) => {
@@ -105,9 +131,7 @@ const OBSSettingsForm: FC<OBSSettingsFormProps> = ({
               >
                 <Button
                   htmlType="button"
-                  onClick={() => {
-                    broadcaster.source.clickButton(obsSource.id, item.name);
-                  }}
+                  onClick={() => onButtonClick(item.name)}
                 >
                   {item.description}
                 </Button>

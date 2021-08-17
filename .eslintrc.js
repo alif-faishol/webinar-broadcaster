@@ -7,6 +7,7 @@ module.exports = {
     'react/jsx-props-no-spreading': 'off',
     'jsx-a11y/label-has-associated-control': 'off',
     'class-methods-use-this': 'off',
+    'no-bitwise': 'off',
   },
   parserOptions: {
     ecmaVersion: 2020,

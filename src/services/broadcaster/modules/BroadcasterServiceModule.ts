@@ -7,12 +7,17 @@ abstract class BroadcasterServiceModule {
     [key: string]: (...args: any[]) => Promise<any>;
   };
 
+  protected event?: electron.IpcMainInvokeEvent;
+
   constructor() {
     if (process.type !== 'browser') return;
     Object.entries(this.registerIpcMethods()).forEach(([fnName, fn]) => {
       electron.ipcMain.handle(
         `BROADCASTER_MODULE_IPC_${this.constructor.name}-${fnName}`,
-        (_event, ...args) => fn(...args)
+        (event, ...args) => {
+          this.event = event;
+          return fn.apply(this, args);
+        }
       );
     });
   }

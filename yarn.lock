@@ -4855,10 +4855,9 @@ electron-debug@^3.1.0:
     electron-is-dev "^1.1.0"
     electron-localshortcut "^3.1.0"
 
-electron-devtools-installer@^3.1.1:
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/electron-devtools-installer/-/electron-devtools-installer-3.2.0.tgz#acc48d24eb7033fe5af284a19667e73b78d406d0"
-  integrity sha512-t3UczsYugm4OAbqvdImMCImIMVdFzJAHgbwHpkl5jmfu1izVgUcP/mnrPqJIpEeCK1uZGpt+yHgWEN+9EwoYhQ==
+"electron-devtools-installer@git+https://github.com/MarshallOfSound/electron-devtools-installer.git":
+  version "0.0.0-development"
+  resolved "git+https://github.com/MarshallOfSound/electron-devtools-installer.git#65ffa894bf635745d9399e79fb38682ccfd9c6e0"
   dependencies:
     rimraf "^3.0.2"
     semver "^7.2.1"
@@ -9204,9 +9203,9 @@ object.values@^1.1.0, object.values@^1.1.1, object.values@^1.1.2, object.values@
     define-properties "^1.1.3"
     es-abstract "^1.18.2"
 
-"obs-studio-node@file:../obs-studio-node/build/obs-studio-node-0.3.49-win64.tar.gz":
+"obs-studio-node@file:../obs-studio-node/build/obs-studio-node-0.3.51-win64.tar.gz":
   version "0.3.99"
-  resolved "file:../obs-studio-node/build/obs-studio-node-0.3.49-win64.tar.gz#a5e359843fb2e500ebf342a669d986c7480a4cb6"
+  resolved "file:../obs-studio-node/build/obs-studio-node-0.3.51-win64.tar.gz#0662148518a3139281fa24db17b70d83a8d88f37"
 
 obuf@^1.0.0, obuf@^1.1.2:
   version "1.1.2"

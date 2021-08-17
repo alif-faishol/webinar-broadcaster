@@ -1,11 +1,11 @@
 import { v4 as uuid } from 'uuid';
 import * as osn from 'obs-studio-node';
-import { backOff } from 'exponential-backoff';
 import { BehaviorSubject } from 'rxjs';
 import {
   CustomItem,
   CustomItemTemplate,
   OBSItemTemplate,
+  Scene,
   SceneItem,
   SceneItemTransformValues,
   SerializableSceneItem,
@@ -14,6 +14,7 @@ import TransformUtils from '../utils/TransformUtils';
 import SourceModule from './source';
 import type { BroadcasterServiceState } from '..';
 import BroadcasterServiceModule from './BroadcasterServiceModule';
+import AudioModule from './audio';
 
 export const DEFAULT_TRANSFORM_VALUES = {
   scale: { x: 1, y: 1 },
@@ -23,22 +24,30 @@ export const DEFAULT_TRANSFORM_VALUES = {
 } as const;
 
 class SceneModule extends BroadcasterServiceModule {
-  private observableState: BehaviorSubject<BroadcasterServiceState>;
+  private observableState!: BehaviorSubject<BroadcasterServiceState>;
 
-  private source: SourceModule;
+  private source!: SourceModule;
+
+  private audio!: AudioModule;
+
+  private transition!: osn.ITransition;
 
   constructor(
     observableState?: BehaviorSubject<BroadcasterServiceState>,
-    source?: SourceModule
+    source?: SourceModule,
+    audio?: AudioModule
   ) {
     super();
     if (process.type === 'browser') {
       if (!observableState) throw Error('observableState required');
       if (!source) throw Error('source required');
+      if (!audio) throw Error('audio required');
+      this.observableState = observableState;
+      this.source = source;
+      this.transition = osn.TransitionFactory.create('fade_transition', uuid());
+      this.audio = audio;
+      osn.Global.setOutputSource(1, this.transition);
     }
-    this.observableState =
-      observableState as BehaviorSubject<BroadcasterServiceState>;
-    this.source = source as SourceModule;
   }
 
   static serializeSceneItem(sceneItem: osn.ISceneItem): SerializableSceneItem {
@@ -55,25 +64,36 @@ class SceneModule extends BroadcasterServiceModule {
   async add(name: string) {
     try {
       const osnScene = osn.SceneFactory.create(uuid());
-      const newScene = {
+      const newScene: Scene = {
         id: osnScene.name,
         items: [],
+        audioSources: [],
         name,
       };
 
-      const state = this.observableState.getValue();
+      const desktopAudio = osn.InputFactory.create(
+        'wasapi_output_capture',
+        `Desktop Audio-${uuid()}`
+      );
+      const micAudio = osn.InputFactory.create(
+        'wasapi_input_capture',
+        `Mic/Aux-${uuid()}`
+      );
+      osnScene.add(desktopAudio);
+      osnScene.add(micAudio);
 
-      const activeScene =
-        state.scenes.length === 0 ? newScene : state.activeScene;
-      if (state.scenes.length === 0) {
-        osn.Global.setOutputSource(1, osnScene);
-      }
+      newScene.audioSources = this.audio.getAudioSources(osnScene);
+
+      const state = this.observableState.value;
 
       this.observableState.next({
         ...state,
         scenes: [...state.scenes, newScene],
-        activeScene,
       });
+
+      if (state.scenes.length === 0) {
+        await this.activate(newScene.id);
+      }
 
       return newScene;
     } catch (err) {
@@ -92,11 +112,15 @@ class SceneModule extends BroadcasterServiceModule {
       this.observableState.next({
         ...state,
         scenes: filteredScenes,
-        activeScene:
-          state.activeScene?.id === sceneId
-            ? filteredScenes[0]
-            : state.activeScene,
       });
+      if (state.activeScene?.id === sceneId) {
+        if (filteredScenes[0]) await this.activate(filteredScenes[0].id);
+        else
+          this.observableState.next({
+            ...this.observableState.value,
+            activeScene: undefined,
+          });
+      }
     } catch (err) {
       throw Error(err.message);
     }
@@ -107,7 +131,8 @@ class SceneModule extends BroadcasterServiceModule {
       const state = this.observableState.getValue();
       const scene = state.scenes.find(({ id }) => id === sceneId);
       const osnScene = osn.SceneFactory.fromName(sceneId);
-      osn.Global.setOutputSource(1, osnScene);
+      osn.Global.setOutputSource(1, this.transition);
+      this.transition.start(200, osnScene);
       this.observableState.next({ ...state, activeScene: scene });
     } catch (err) {
       throw Error(err.message);
@@ -119,6 +144,8 @@ class SceneModule extends BroadcasterServiceModule {
     sceneId?: string
   ) {
     const scene = this.getSceneWithFallback(sceneId);
+    const osnScene = osn.SceneFactory.fromName(scene.id);
+    if (!osnScene) throw Error('scene not found in OBS');
 
     if (template.type === 'browser-rendered') {
       const newItem = {
@@ -140,8 +167,6 @@ class SceneModule extends BroadcasterServiceModule {
         const osnSource = template.obsSourceId
           ? osn.InputFactory.fromName(template.obsSourceId)
           : osn.InputFactory.create(template.obsSourceType, uuid());
-        const osnScene = osn.SceneFactory.fromName(scene.id);
-        if (!osnScene) throw Error('scene not found in OBS');
         const osnSceneItem = osnScene.add(osnSource);
         try {
           const sceneItem = SceneModule.serializeSceneItem(osnSceneItem);
@@ -156,6 +181,7 @@ class SceneModule extends BroadcasterServiceModule {
         throw Error(err.message);
       }
     }
+    scene.audioSources = this.audio.getAudioSources(osnScene);
     this.observableState.next(this.observableState.value);
   }
 
@@ -183,6 +209,7 @@ class SceneModule extends BroadcasterServiceModule {
       osnSceneItem.source.release();
       osnSceneItem.source.remove();
       osnSceneItem.remove();
+      scene.audioSources = this.audio.getAudioSources(osnScene);
     }
     scene.items = scene.items.filter((item) => item.id !== itemId);
     this.observableState.next(this.observableState.value);

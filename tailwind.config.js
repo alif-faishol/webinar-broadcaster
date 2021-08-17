@@ -5,7 +5,12 @@ module.exports = {
   mode: 'jit',
   darkMode: false, // or 'media' or 'class'
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        'ant-red': '#ff4d4f',
+        'ant-blue': '#1890ff',
+      },
+    },
   },
   variants: {
     extend: {},

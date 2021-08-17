@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@heroicons/react": "^1.0.1",
-    "obs-studio-node": "file:..\\obs-studio-node\\build\\obs-studio-node-0.3.49-win64.tar.gz",
+    "obs-studio-node": "file:..\\obs-studio-node\\build\\obs-studio-node-0.3.51-win64.tar.gz",
     "socket.io": "^4.1.2"
   }
 }

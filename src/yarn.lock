@@ -117,9 +117,9 @@ object-assign@^4:
   resolved "https://registry.yarnpkg.com/object-assign/-/object-assign-4.1.1.tgz#2109adc7965887cfc05cbbd442cac8bfbb360863"
   integrity sha1-IQmtx5ZYh8/AXLvUQsrIv7s2CGM=
 
-"obs-studio-node@file:../obs-studio-node/build/obs-studio-node-0.3.49-win64.tar.gz":
+"obs-studio-node@file:../obs-studio-node/build/obs-studio-node-0.3.51-win64.tar.gz":
   version "0.3.99"
-  resolved "file:../obs-studio-node/build/obs-studio-node-0.3.49-win64.tar.gz#a5e359843fb2e500ebf342a669d986c7480a4cb6"
+  resolved "file:../obs-studio-node/build/obs-studio-node-0.3.51-win64.tar.gz#0662148518a3139281fa24db17b70d83a8d88f37"
 
 socket.io-adapter@~2.3.0:
   version "2.3.1"

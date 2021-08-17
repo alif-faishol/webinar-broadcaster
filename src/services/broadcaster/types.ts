@@ -138,6 +138,7 @@ export type Scene = {
   id: string;
   name: string;
   items: SceneItem[];
+  audioSources: string[];
   selectedItem?: SceneItem;
 };
 

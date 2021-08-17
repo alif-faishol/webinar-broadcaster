@@ -20,6 +20,7 @@ import useBroadcasterState from '../hooks/useBroadcasterState';
 import BroadcasterDisplay, {
   getDisplayBounds,
 } from '../components/BroadcasterDisplay';
+import SceneToolbar from '../components/SceneToolbar';
 
 const broadcaster = BroadcasterService.getIpcRendererClient();
 
@@ -91,20 +92,23 @@ const MainScreen = () => {
       <Layout className="bg-transparent">
         <Layout.Content>
           {broadcasterState.activeScene ? (
-            <BroadcasterDisplay
-              className="border mx-auto w-full h-full"
-              windowHandle="background"
-              ref={previewRef}
-            >
-              {elementToTransform && (
-                <ElementTransformer
-                  onClose={() => broadcaster.scene.selectItem()}
-                  onChange={handleTransformElement}
-                  item={elementToTransform}
-                  containerBounds={getDisplayBounds(previewRef.current)}
-                />
-              )}
-            </BroadcasterDisplay>
+            <div className="flex flex-col h-full">
+              <BroadcasterDisplay
+                className="flex-1"
+                windowHandle="background"
+                ref={previewRef}
+              >
+                {elementToTransform && (
+                  <ElementTransformer
+                    onClose={() => broadcaster.scene.selectItem()}
+                    onChange={handleTransformElement}
+                    item={elementToTransform}
+                    containerBounds={getDisplayBounds(previewRef.current)}
+                  />
+                )}
+              </BroadcasterDisplay>
+              <SceneToolbar activeScene={broadcasterState.activeScene} />
+            </div>
           ) : (
             <Empty />
           )}
