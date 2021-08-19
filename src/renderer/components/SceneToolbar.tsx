@@ -1,3 +1,4 @@
+import { PlayCircleOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 import React, { FC } from 'react';
 import { Scene } from '../../services/broadcaster/types';
@@ -11,7 +12,7 @@ const SceneToolbar: FC<SceneToolbarProps> = ({ activeScene }) => {
   return (
     <div className="flex self-center border-solid border-ant-blue py-2 px-3 rounded-3xl mb-2 mt-4 shadow-md">
       <div className="mr-12">
-        <Button type="primary" shape="round">
+        <Button type="primary" shape="round" icon={<PlayCircleOutlined />}>
           Start Streaming
         </Button>
       </div>

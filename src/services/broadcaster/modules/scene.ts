@@ -217,11 +217,12 @@ class SceneModule extends BroadcasterServiceModule {
   }
 
   async transformItem(
-    sceneId: string,
+    sceneId: string | undefined,
     itemId: number | string,
     transformFnOrValues:
       | ((item: SceneItem) => Partial<SceneItemTransformValues>)
-      | Partial<SceneItemTransformValues>
+      | Partial<SceneItemTransformValues>,
+    emitUpdate = true
   ) {
     const scene = this.getSceneWithFallback(sceneId);
     const sceneItemIndex = scene.items.findIndex((item) => item.id === itemId);
@@ -252,7 +253,7 @@ class SceneModule extends BroadcasterServiceModule {
         throw Error(err.message);
       }
     }
-    this.observableState.next(this.observableState.value);
+    if (emitUpdate) this.observableState.next(this.observableState.value);
     return updatedSceneItem;
   }
 

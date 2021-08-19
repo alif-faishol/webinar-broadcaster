@@ -10,17 +10,13 @@ import {
   Empty,
 } from 'antd';
 import ElementsSidebar from '../components/ElementsSidebar';
-import ElementTransformer from '../components/ElementTransformer';
-import {
-  SceneItem,
-  SceneItemTransformValues,
-} from '../../services/broadcaster/types';
 import BroadcasterService from '../../services/broadcaster';
 import useBroadcasterState from '../hooks/useBroadcasterState';
 import BroadcasterDisplay, {
   getDisplayBounds,
 } from '../components/BroadcasterDisplay';
 import SceneToolbar from '../components/SceneToolbar';
+import ElementsTransformer from '../components/ElementsTransformer';
 
 const broadcaster = BroadcasterService.getIpcRendererClient();
 
@@ -28,36 +24,7 @@ const MainScreen = () => {
   const previewRef = useRef<HTMLDivElement>(null);
   const broadcasterState = useBroadcasterState();
 
-  const [elementToTransform, setElementToTransform] = useState<
-    SceneItem & {
-      width: number;
-      height: number;
-    }
-  >();
   const [addSceneModalOpen, setAddSceneModalOpen] = useState(false);
-
-  const handleTransformElement = useCallback(
-    (item: SceneItemTransformValues & { id: string | number }) => {
-      if (!broadcasterState.activeScene) return;
-      broadcaster.scene.transformItem(
-        broadcasterState.activeScene.id,
-        item.id,
-        item
-      );
-    },
-    [broadcasterState.activeScene]
-  );
-
-  useEffect(() => {
-    if (!broadcasterState.activeScene?.selectedItem) {
-      setElementToTransform(undefined);
-      return;
-    }
-    broadcaster.scene
-      .getItemWithDimensions()
-      .then(setElementToTransform)
-      .catch(console.error);
-  }, [broadcasterState.activeScene?.selectedItem]);
 
   return (
     <Layout className="p-4 bg-transparent h-full">
@@ -97,16 +64,10 @@ const MainScreen = () => {
                 className="flex-1"
                 windowHandle="background"
                 ref={previewRef}
-              >
-                {elementToTransform && (
-                  <ElementTransformer
-                    onClose={() => broadcaster.scene.selectItem()}
-                    onChange={handleTransformElement}
-                    item={elementToTransform}
-                    containerBounds={getDisplayBounds(previewRef.current)}
-                  />
-                )}
-              </BroadcasterDisplay>
+              />
+              <ElementsTransformer
+                containerBounds={getDisplayBounds(previewRef.current)}
+              />
               <SceneToolbar activeScene={broadcasterState.activeScene} />
             </div>
           ) : (

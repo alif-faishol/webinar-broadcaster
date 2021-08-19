@@ -30,110 +30,118 @@ type AudioConfiguratorProps = {
 
 const broadcaster = BroadcasterService.getIpcRendererClient();
 
-const AudioSourceForm: FC<{ sourceId: string }> = ({ sourceId }) => {
-  const mutex = useRef(new Mutex());
-  const broadcasterState = useBroadcasterState();
-  const [source, setSource] = useState<SerializableSource>();
+const AudioSourceForm: FC<{ sourceId: string; onSourceLoaded?: () => void }> =
+  ({ sourceId, onSourceLoaded }) => {
+    const mutex = useRef(new Mutex());
+    const broadcasterState = useBroadcasterState();
+    const [source, setSource] = useState<SerializableSource>();
 
-  const loadSource = useCallback(async () => {
-    const newSource = await broadcaster.source.get(sourceId);
-    setSource(newSource);
-  }, [sourceId]);
+    const loadSource = useCallback(async () => {
+      const newSource = await broadcaster.source.get(sourceId);
+      setSource(newSource);
+      onSourceLoaded?.();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sourceId]);
 
-  useEffect(() => {
-    loadSource();
-  }, [loadSource]);
+    useEffect(() => {
+      loadSource();
+    }, [loadSource]);
 
-  if (!source) return null;
+    if (!source) return null;
 
-  const name =
-    broadcasterState.activeScene?.items.find(
-      (it) => it.type === 'obs-source' && it.sourceId === sourceId
-    )?.name ??
-    source.id.split('-')[0] ??
-    'Unknown';
+    const name =
+      broadcasterState.activeScene?.items.find(
+        (it) => it.type === 'obs-source' && it.sourceId === sourceId
+      )?.name ??
+      source.id.split('-')[0] ??
+      'Unknown';
 
-  return (
-    <>
-      <div className="flex justify-between">
-        <Typography.Text strong>{name}</Typography.Text>
-        <div className="flex">
-          <Tooltip title={source.muted ? 'Unmute' : 'Mute'}>
-            <Button
-              className="mr-1"
-              shape="circle"
-              size="small"
-              icon={source.muted ? <AudioMutedOutlined /> : <AudioOutlined />}
-              danger={source.muted}
-              type={source.muted ? 'primary' : 'default'}
-              onClick={() => {
-                mutex.current.runExclusive(async () => {
-                  await broadcaster.audio.toggleMute(sourceId);
-                  await loadSource();
-                });
-              }}
-            />
-          </Tooltip>
-          <Tooltip
-            title={source.monitoringType === 2 ? 'Stop listening' : 'Listen'}
-          >
-            <Button
-              className="mr-1"
-              shape="circle"
-              size="small"
-              icon={<SoundOutlined />}
-              type={source.monitoringType === 2 ? 'primary' : 'default'}
-              onClick={() => {
-                mutex.current.runExclusive(async () => {
-                  await broadcaster.audio.setMonitoringType(
-                    sourceId,
-                    source.monitoringType === 2 ? 0 : 2
-                  );
-                  await loadSource();
-                });
-              }}
-            />
-          </Tooltip>
-          <Popover
-            trigger="click"
-            placement="right"
-            content={
-              <div className="w-48">
-                <OBSSettingsForm
-                  sourceId={sourceId}
-                  allowedSettingsId={['device_id']}
-                />
-              </div>
-            }
-          >
-            <Tooltip title="Settings">
-              <Button shape="circle" size="small" icon={<SettingOutlined />} />
+    return (
+      <>
+        <div className="flex justify-between">
+          <Typography.Text strong>{name}</Typography.Text>
+          <div className="flex">
+            <Tooltip title={source.muted ? 'Unmute' : 'Mute'}>
+              <Button
+                className="mr-1"
+                shape="circle"
+                size="small"
+                icon={source.muted ? <AudioMutedOutlined /> : <AudioOutlined />}
+                danger={source.muted}
+                type={source.muted ? 'primary' : 'default'}
+                onClick={() => {
+                  mutex.current.runExclusive(async () => {
+                    await broadcaster.audio.toggleMute(sourceId);
+                    await loadSource();
+                  });
+                }}
+              />
             </Tooltip>
-          </Popover>
+            <Tooltip
+              title={source.monitoringType === 2 ? 'Stop listening' : 'Listen'}
+            >
+              <Button
+                className="mr-1"
+                shape="circle"
+                size="small"
+                icon={<SoundOutlined />}
+                type={source.monitoringType === 2 ? 'primary' : 'default'}
+                onClick={() => {
+                  mutex.current.runExclusive(async () => {
+                    await broadcaster.audio.setMonitoringType(
+                      sourceId,
+                      source.monitoringType === 2 ? 0 : 2
+                    );
+                    await loadSource();
+                  });
+                }}
+              />
+            </Tooltip>
+            <Popover
+              trigger="click"
+              placement="right"
+              content={
+                <div className="w-48">
+                  <OBSSettingsForm
+                    sourceId={sourceId}
+                    allowedSettingsId={['device_id']}
+                  />
+                </div>
+              }
+            >
+              <Tooltip title="Settings">
+                <Button
+                  shape="circle"
+                  size="small"
+                  icon={<SettingOutlined />}
+                />
+              </Tooltip>
+            </Popover>
+          </div>
         </div>
-      </div>
-      <Slider
-        min={0}
-        step={0.01}
-        max={1}
-        defaultValue={source.volume}
-        tipFormatter={(volume) => volume && Math.round(volume * 100)}
-        onChange={(volume) => {
-          mutex.current.runExclusive(async () => {
-            await broadcaster.audio.setVolume(sourceId, volume);
-            await loadSource();
-          });
-        }}
-      />
-      <div className="ml-[6px]">
-        <VolmeterBar sourceId={sourceId} />
-      </div>
-    </>
-  );
-};
+        <div className="mx-[-6px]">
+          <Slider
+            min={0}
+            step={0.01}
+            max={1}
+            defaultValue={source.volume}
+            tipFormatter={(volume) => volume && Math.round(volume * 100)}
+            onChange={(volume) => {
+              mutex.current.runExclusive(async () => {
+                await broadcaster.audio.setVolume(sourceId, volume);
+                await loadSource();
+              });
+            }}
+          />
+        </div>
+        <VolmeterBar sourceId={sourceId} width={256} />
+      </>
+    );
+  };
 
 const AudioConfigurator: FC<AudioConfiguratorProps> = ({ audioSourceIds }) => {
   const [configuratorVisible, setConfiguratorVisible] = useState(false);
+  const [volmeterKey, setVolmeterKey] = useState(Math.random());
 
   return (
     <Popover
@@ -141,7 +149,10 @@ const AudioConfigurator: FC<AudioConfiguratorProps> = ({ audioSourceIds }) => {
       destroyTooltipOnHide
       content={audioSourceIds.map((sourceId, i, arr) => (
         <div className="w-64" key={sourceId}>
-          <AudioSourceForm sourceId={sourceId} />
+          <AudioSourceForm
+            sourceId={sourceId}
+            onSourceLoaded={() => setVolmeterKey(Math.random())}
+          />
           {i !== arr.length - 1 && <Divider className="my-3" />}
         </div>
       ))}
@@ -154,10 +165,10 @@ const AudioConfigurator: FC<AudioConfiguratorProps> = ({ audioSourceIds }) => {
         shape="round"
         className="flex items-center"
       >
-        Audio
+        <div className="mx-2">Audio</div>
         {audioSourceIds.map((sourceId) => (
           <div className="w-[16px] h-[16px] ml-1" key={sourceId}>
-            <VolmeterCircle sourceId={sourceId} />
+            <VolmeterCircle sourceId={sourceId} key={volmeterKey} />
           </div>
         ))}
       </Button>

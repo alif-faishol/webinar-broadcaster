@@ -129,6 +129,10 @@ export default merge(baseConfig, {
       [
         new TerserPlugin({
           parallel: true,
+          terserOptions: {
+            keep_fnames: true,
+            keep_classnames: true,
+          }
         }),
         new CssMinimizerPlugin(),
       ],

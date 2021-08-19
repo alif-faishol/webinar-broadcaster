@@ -36,6 +36,10 @@ export default merge(baseConfig, {
     minimizer: [
       new TerserPlugin({
         parallel: true,
+        terserOptions: {
+          keep_fnames: true,
+          keep_classnames: true,
+        }
       }),
     ]
   },
