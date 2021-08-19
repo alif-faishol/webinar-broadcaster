@@ -211,6 +211,9 @@ class SceneModule extends BroadcasterServiceModule {
       osnSceneItem.remove();
       scene.audioSources = this.audio.getAudioSources(osnScene);
     }
+    if (scene.selectedItem?.id === itemId) {
+      scene.selectedItem = undefined;
+    }
     scene.items = scene.items.filter((item) => item.id !== itemId);
     this.observableState.next(this.observableState.value);
     return itemId;

@@ -1,4 +1,5 @@
-import { message } from 'antd';
+import { DownOutlined } from '@ant-design/icons';
+import { message, Button, Menu, Dropdown } from 'antd';
 import { Mutex } from 'async-mutex';
 import React, { FC, useCallback, useEffect, useRef } from 'react';
 import BroadcasterService from '../../services/broadcaster';
@@ -6,7 +7,7 @@ import {
   SceneItem,
   SceneItemTransformValues,
 } from '../../services/broadcaster/types';
-import {
+import TransformUtils, {
   PREVIEW_SCREEN_HEIGHT,
   PREVIEW_SCREEN_WIDTH,
 } from '../../services/broadcaster/utils/TransformUtils';
@@ -34,6 +35,7 @@ const ElementsTransformer: FC<ElementsTransformerProps> = ({
 }) => {
   const broadcasterState = useBroadcasterState();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
   const ctx = canvasRef.current?.getContext('2d');
   const mutex = useRef(new Mutex());
   const rafIdRef = useRef<number>();
@@ -72,6 +74,8 @@ const ElementsTransformer: FC<ElementsTransformerProps> = ({
 
       const { selectedElement } = canvasStateRef.current;
 
+      if (toolbarRef.current)
+        toolbarRef.current.style.display = selectedElement ? 'block' : 'none';
       if (selectedElement) {
         const rectPath = [
           [selectedElement.position.x, selectedElement.position.y],
@@ -104,11 +108,11 @@ const ElementsTransformer: FC<ElementsTransformerProps> = ({
                 selectedElement.scale.y,
           ],
         ];
+
         // top
         ctx.beginPath();
         ctx.lineWidth = 5;
-        if (selectedElement.crop.top || altKeyPressed)
-          ctx.strokeStyle = '#ff4d4f';
+        if (selectedElement.crop.top) ctx.strokeStyle = '#ff4d4f';
         else ctx.strokeStyle = '#1890ff';
         ctx.moveTo(rectPath[0][0], rectPath[0][1]);
         ctx.lineTo(rectPath[1][0], rectPath[1][1]);
@@ -116,8 +120,7 @@ const ElementsTransformer: FC<ElementsTransformerProps> = ({
 
         // right
         ctx.beginPath();
-        if (selectedElement.crop.right || altKeyPressed)
-          ctx.strokeStyle = '#ff4d4f';
+        if (selectedElement.crop.right) ctx.strokeStyle = '#ff4d4f';
         else ctx.strokeStyle = '#1890ff';
         ctx.moveTo(rectPath[1][0], rectPath[1][1]);
         ctx.lineTo(rectPath[2][0], rectPath[2][1]);
@@ -125,8 +128,7 @@ const ElementsTransformer: FC<ElementsTransformerProps> = ({
 
         // bottom
         ctx.beginPath();
-        if (selectedElement.crop.bottom || altKeyPressed)
-          ctx.strokeStyle = '#ff4d4f';
+        if (selectedElement.crop.bottom) ctx.strokeStyle = '#ff4d4f';
         else ctx.strokeStyle = '#1890ff';
         ctx.moveTo(rectPath[2][0], rectPath[2][1]);
         ctx.lineTo(rectPath[3][0], rectPath[3][1]);
@@ -134,8 +136,7 @@ const ElementsTransformer: FC<ElementsTransformerProps> = ({
 
         // left
         ctx.beginPath();
-        if (selectedElement.crop.left || altKeyPressed)
-          ctx.strokeStyle = '#ff4d4f';
+        if (selectedElement.crop.left) ctx.strokeStyle = '#ff4d4f';
         else ctx.strokeStyle = '#1890ff';
         ctx.moveTo(rectPath[3][0], rectPath[3][1]);
         ctx.lineTo(rectPath[0][0], rectPath[0][1]);
@@ -151,7 +152,7 @@ const ElementsTransformer: FC<ElementsTransformerProps> = ({
         ctx.fill();
       }
     });
-  }, [ctx, altKeyPressed]);
+  }, [ctx]);
 
   const getCanvasCursorPos = useCallback(
     (x, y) => {
@@ -485,22 +486,197 @@ const ElementsTransformer: FC<ElementsTransformerProps> = ({
   }, []);
 
   return (
-    <>
+    <div
+      className="absolute block"
+      style={{
+        left: containerBounds.x,
+        top: containerBounds.y,
+        width: containerBounds.width,
+        height: containerBounds.height,
+      }}
+    >
       <canvas
         ref={canvasRef}
-        className="absolute block"
+        className="absolute block inset-0"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         style={{
-          left: containerBounds.x,
-          top: containerBounds.y,
           width: containerBounds.width,
           height: containerBounds.height,
         }}
       />
-    </>
+      <div
+        ref={toolbarRef}
+        className="absolute right-2 top-2"
+        style={{ display: 'none' }}
+      >
+        <Dropdown
+          trigger={['click']}
+          className="mr-1"
+          overlay={
+            <Menu>
+              <Menu.Item
+                onClick={() => {
+                  const { selectedElement } = canvasStateRef.current;
+                  if (!selectedElement) return;
+                  broadcaster.scene.transformItem(
+                    undefined,
+                    selectedElement.id,
+                    TransformUtils.fitInCanvas({
+                      width:
+                        selectedElement.width -
+                        selectedElement.crop.left -
+                        selectedElement.crop.right,
+                      height:
+                        selectedElement.height -
+                        selectedElement.crop.top -
+                        selectedElement.crop.bottom,
+                    })
+                  );
+                }}
+              >
+                Fit in canvas
+              </Menu.Item>
+              <Menu.Item
+                onClick={() => {
+                  const { selectedElement } = canvasStateRef.current;
+                  if (!selectedElement) return;
+                  broadcaster.scene.transformItem(
+                    undefined,
+                    selectedElement.id,
+                    TransformUtils.fillCanvas({
+                      width:
+                        selectedElement.width -
+                        selectedElement.crop.left -
+                        selectedElement.crop.right,
+                      height:
+                        selectedElement.height -
+                        selectedElement.crop.top -
+                        selectedElement.crop.bottom,
+                    })
+                  );
+                }}
+              >
+                Fill canvas
+              </Menu.Item>
+              <Menu.Item
+                onClick={() => {
+                  const { selectedElement } = canvasStateRef.current;
+                  if (!selectedElement) return;
+                  broadcaster.scene.transformItem(
+                    undefined,
+                    selectedElement.id,
+                    {
+                      position: { x: 0, y: 0 },
+                      scale: { x: 1, y: 1 },
+                      crop: { left: 0, top: 0, right: 0, bottom: 0 },
+                      rotation: 0,
+                    }
+                  );
+                }}
+              >
+                Original size
+              </Menu.Item>
+            </Menu>
+          }
+        >
+          <Button>
+            Resize
+            <DownOutlined />
+          </Button>
+        </Dropdown>
+        <Dropdown
+          trigger={['click']}
+          overlay={
+            <Menu>
+              <Menu.Item
+                onClick={() => {
+                  const { selectedElement } = canvasStateRef.current;
+                  if (!selectedElement) return;
+                  broadcaster.scene.transformItem(
+                    undefined,
+                    selectedElement.id,
+                    {
+                      position: { x: selectedElement.position.x, y: 0 },
+                    }
+                  );
+                }}
+              >
+                Top
+              </Menu.Item>
+              <Menu.Item
+                onClick={() => {
+                  const { selectedElement } = canvasStateRef.current;
+                  if (!selectedElement) return;
+                  broadcaster.scene.transformItem(
+                    undefined,
+                    selectedElement.id,
+                    {
+                      position: {
+                        x:
+                          PREVIEW_SCREEN_WIDTH -
+                          (selectedElement.width -
+                            selectedElement.crop.left -
+                            selectedElement.crop.right) *
+                            selectedElement.scale.x,
+                        y: selectedElement.position.y,
+                      },
+                    }
+                  );
+                }}
+              >
+                Right
+              </Menu.Item>
+              <Menu.Item
+                onClick={() => {
+                  const { selectedElement } = canvasStateRef.current;
+                  if (!selectedElement) return;
+                  broadcaster.scene.transformItem(
+                    undefined,
+                    selectedElement.id,
+                    {
+                      position: {
+                        x: selectedElement.position.x,
+                        y:
+                          PREVIEW_SCREEN_HEIGHT -
+                          (selectedElement.height -
+                            selectedElement.crop.top -
+                            selectedElement.crop.bottom) *
+                            selectedElement.scale.y,
+                      },
+                    }
+                  );
+                }}
+              >
+                Bottom
+              </Menu.Item>
+              <Menu.Item
+                onClick={() => {
+                  const { selectedElement } = canvasStateRef.current;
+                  if (!selectedElement) return;
+                  broadcaster.scene.transformItem(
+                    undefined,
+                    selectedElement.id,
+                    {
+                      position: { x: 0, y: selectedElement.position.y },
+                    }
+                  );
+                }}
+              >
+                Left
+              </Menu.Item>
+            </Menu>
+          }
+        >
+          <Button>
+            Align
+            <DownOutlined />
+          </Button>
+        </Dropdown>
+      </div>
+    </div>
   );
 };
 
