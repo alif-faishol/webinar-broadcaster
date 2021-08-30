@@ -90,6 +90,10 @@ const createWindow = async () => {
       enableRemoteModule: true,
     },
   });
+  frontendWindow.webContents.on('new-window', (e, url) => {
+    e.preventDefault();
+    shell.openExternal(url);
+  });
   frontendWindow.on('hide', () => {
     if (!mainWindow) return;
     mainWindow.hide();

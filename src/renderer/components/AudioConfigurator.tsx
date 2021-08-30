@@ -141,6 +141,7 @@ const AudioSourceForm: FC<{ sourceId: string; onSourceLoaded?: () => void }> =
 
 const AudioConfigurator: FC<AudioConfiguratorProps> = ({ audioSourceIds }) => {
   const [configuratorVisible, setConfiguratorVisible] = useState(false);
+  // used to notify VolmeterCircle to refresh
   const [volmeterKey, setVolmeterKey] = useState(Math.random());
 
   return (
@@ -167,8 +168,8 @@ const AudioConfigurator: FC<AudioConfiguratorProps> = ({ audioSourceIds }) => {
       >
         <div className="mx-2">Audio</div>
         {audioSourceIds.map((sourceId) => (
-          <div className="w-[16px] h-[16px] ml-1" key={sourceId}>
-            <VolmeterCircle sourceId={sourceId} key={volmeterKey} />
+          <div className="w-[16px] h-[16px] ml-1" key={sourceId + volmeterKey}>
+            <VolmeterCircle sourceId={sourceId} />
           </div>
         ))}
       </Button>

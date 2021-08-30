@@ -10,11 +10,22 @@ import SourceModule from './modules/source';
 import ElementModule from './modules/element';
 import { processTypeIs } from './utils/decorator';
 import AudioModule from './modules/audio';
+import SettingModule from './modules/setting';
+import StreamingModule from './modules/streaming';
+
+type YoutubeServer = {
+  rtmpUrl: 'rtmp://a.rtmp.youtube.com/live2';
+  rtmpKey: string;
+};
 
 export type BroadcasterServiceState = {
   scenes: Scene[];
   activeScene?: Scene;
   elementRendererPort?: number;
+  streaming: boolean;
+  settings?: {
+    serverConfig?: YoutubeServer;
+  };
 };
 
 class BroadcasterService {
@@ -27,6 +38,7 @@ class BroadcasterService {
 
   observableState = new BehaviorSubject<BroadcasterServiceState>({
     scenes: [],
+    streaming: false,
   });
 
   source: SourceModule;
@@ -38,6 +50,10 @@ class BroadcasterService {
   display: DisplayModule;
 
   element: ElementModule;
+
+  setting: SettingModule;
+
+  streaming: StreamingModule;
 
   private constructor(windows: DisplayModule['windows']) {
     const initResult = this.initObs();
@@ -57,6 +73,8 @@ class BroadcasterService {
     this.scene = new SceneModule(this.observableState, this.source, this.audio);
     this.display = new DisplayModule(windows);
     this.element = new ElementModule();
+    this.setting = new SettingModule();
+    this.streaming = new StreamingModule(this.observableState);
   }
 
   static getInstance() {
@@ -84,6 +102,8 @@ class BroadcasterService {
       scene: new SceneModule().getIpcRendererMethods(),
       display: new DisplayModule().getIpcRendererMethods(),
       element: new ElementModule().getIpcRendererMethods(),
+      setting: new SettingModule().getIpcRendererMethods(),
+      streaming: new StreamingModule().getIpcRendererMethods(),
 
       subscribe: (cb: (state: BroadcasterServiceState) => void) => {
         electron.ipcRenderer.send('BROADCASTER_SUBSCRIBE_STATE');
@@ -96,7 +116,10 @@ class BroadcasterService {
         electron.ipcRenderer.on('BROADCASTER_STATE_UPDATED', listener);
         return () => {
           electron.ipcRenderer.send('BROADCASTER_UNSUBSCRIBE_STATE');
-          electron.ipcRenderer.off('BROADCASTER_STATE_UPDATED', listener);
+          electron.ipcRenderer.removeListener(
+            'BROADCASTER_STATE_UPDATED',
+            listener
+          );
         };
       },
     };

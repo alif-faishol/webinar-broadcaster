@@ -17,6 +17,7 @@ import BroadcasterDisplay, {
 } from '../components/BroadcasterDisplay';
 import SceneToolbar from '../components/SceneToolbar';
 import ElementsTransformer from '../components/ElementsTransformer';
+import SetupWizardModal from '../components/SetupWizardModal';
 
 const broadcaster = BroadcasterService.getIpcRendererClient();
 
@@ -25,6 +26,7 @@ const MainScreen = () => {
   const broadcasterState = useBroadcasterState();
 
   const [addSceneModalOpen, setAddSceneModalOpen] = useState(false);
+  const [setupWizardModalOpen, setSetupWizardModalOpen] = useState(false);
 
   return (
     <Layout className="p-4 bg-transparent h-full">
@@ -57,27 +59,46 @@ const MainScreen = () => {
         </Tabs>
       </Layout.Content>
       <Layout className="bg-transparent">
-        <Layout.Content>
-          {broadcasterState.activeScene ? (
-            <div className="flex flex-col h-full">
-              <BroadcasterDisplay
-                className="flex-1"
-                windowHandle="background"
-                ref={previewRef}
-              />
-              <ElementsTransformer
-                containerBounds={getDisplayBounds(previewRef.current)}
-              />
-              <SceneToolbar activeScene={broadcasterState.activeScene} />
-            </div>
-          ) : (
-            <Empty />
-          )}
-        </Layout.Content>
-        <Layout.Sider theme="light" width={384} className="pl-4">
-          <ElementsSidebar activeScene={broadcasterState.activeScene} />
-        </Layout.Sider>
+        {broadcasterState.activeScene ? (
+          <>
+            <Layout.Content>
+              <div className="flex flex-col h-full">
+                <BroadcasterDisplay
+                  className="flex-1"
+                  windowHandle="background"
+                  ref={previewRef}
+                />
+                <ElementsTransformer
+                  containerBounds={getDisplayBounds(previewRef.current)}
+                />
+                <SceneToolbar activeScene={broadcasterState.activeScene} />
+              </div>
+            </Layout.Content>
+            <Layout.Sider theme="light" width={384} className="pl-4">
+              <ElementsSidebar activeScene={broadcasterState.activeScene} />
+            </Layout.Sider>
+          </>
+        ) : (
+          <Layout.Content className="flex justify-center items-center">
+            <Empty description="No Scene">
+              <Button
+                className="mr-2"
+                type="primary"
+                onClick={() => setSetupWizardModalOpen(true)}
+              >
+                Guided Setup
+              </Button>
+              <Button onClick={() => setAddSceneModalOpen(true)}>
+                Create New Scene
+              </Button>
+            </Empty>
+          </Layout.Content>
+        )}
       </Layout>
+      <SetupWizardModal
+        visible={setupWizardModalOpen}
+        onCancel={() => setSetupWizardModalOpen(false)}
+      />
       <Modal
         destroyOnClose
         visible={addSceneModalOpen}

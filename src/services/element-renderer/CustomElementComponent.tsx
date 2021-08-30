@@ -13,7 +13,9 @@ const CustomElementComponent: FC<{
         position: 'absolute',
         left: item.position.x,
         top: item.position.y,
-        transform: `scale(${item.scale.x}, ${item.scale.y})`,
+        transform: `scale(${item.scale.x}, ${item.scale.y}) rotate(${
+          item.rotation ?? 0
+        }deg)`,
         transformOrigin: 'top left',
         overflow: 'hidden',
         width: item.container.width - item.crop.left - item.crop.right,

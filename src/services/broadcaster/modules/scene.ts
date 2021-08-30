@@ -249,7 +249,7 @@ class SceneModule extends BroadcasterServiceModule {
         if (transformValues.crop) osnSceneItem.crop = transformValues.crop;
         if (transformValues.position)
           osnSceneItem.position = transformValues.position;
-        if (transformValues.rotation)
+        if (typeof transformValues.rotation === 'number')
           osnSceneItem.rotation = transformValues.rotation;
         if (transformValues.scale) osnSceneItem.scale = transformValues.scale;
       } catch (err) {

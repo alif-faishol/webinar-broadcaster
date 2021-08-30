@@ -121,8 +121,8 @@ class AudioModule extends BroadcasterServiceModule {
   async unsubscribeVolmeter(sourceId: string) {
     const volmeter = this.volmeters.get(sourceId);
     if (!volmeter) throw Error("volmeter for this source doesn't exist");
-    if (volmeter.subscriberCount < 1) {
-      volmeter.callbacks.forEach(volmeter.volmeter.removeCallback);
+    if (volmeter.subscriberCount <= 1) {
+      volmeter.callbacks.forEach((cb) => volmeter.volmeter.removeCallback(cb));
       volmeter.volmeter.destroy();
       this.volmeters.delete(sourceId);
     } else {

@@ -2,6 +2,7 @@ import { DownOutlined } from '@ant-design/icons';
 import { message, Button, Menu, Dropdown } from 'antd';
 import { Mutex } from 'async-mutex';
 import React, { FC, useCallback, useEffect, useRef } from 'react';
+import SAT from 'sat';
 import BroadcasterService from '../../services/broadcaster';
 import {
   SceneItem,
@@ -78,36 +79,34 @@ const ElementsTransformer: FC<ElementsTransformerProps> = ({
         toolbarRef.current.style.display = selectedElement ? 'block' : 'none';
       if (selectedElement) {
         const rectPath = [
-          [selectedElement.position.x, selectedElement.position.y],
+          [0, 0],
           [
-            selectedElement.position.x +
-              (selectedElement.width -
-                selectedElement.crop.left -
-                selectedElement.crop.right) *
-                selectedElement.scale.x,
-            selectedElement.position.y,
+            (selectedElement.width -
+              selectedElement.crop.left -
+              selectedElement.crop.right) *
+              selectedElement.scale.x,
+            0,
           ],
           [
-            selectedElement.position.x +
-              (selectedElement.width -
-                selectedElement.crop.left -
-                selectedElement.crop.right) *
-                selectedElement.scale.x,
-            selectedElement.position.y +
-              (selectedElement.height -
-                selectedElement.crop.top -
-                selectedElement.crop.bottom) *
-                selectedElement.scale.y,
+            (selectedElement.width -
+              selectedElement.crop.left -
+              selectedElement.crop.right) *
+              selectedElement.scale.x,
+            (selectedElement.height -
+              selectedElement.crop.top -
+              selectedElement.crop.bottom) *
+              selectedElement.scale.y,
           ],
           [
-            selectedElement.position.x,
-            selectedElement.position.y +
-              (selectedElement.height -
-                selectedElement.crop.top -
-                selectedElement.crop.bottom) *
-                selectedElement.scale.y,
+            0,
+            (selectedElement.height -
+              selectedElement.crop.top -
+              selectedElement.crop.bottom) *
+              selectedElement.scale.y,
           ],
         ];
+        ctx.translate(selectedElement.position.x, selectedElement.position.y);
+        ctx.rotate((selectedElement.rotation * Math.PI) / 180);
 
         // top
         ctx.beginPath();
@@ -176,20 +175,37 @@ const ElementsTransformer: FC<ElementsTransformerProps> = ({
         if (!ctx) return;
         const cursorPos = getCanvasCursorPos(e.clientX, e.clientY);
         const { selectedElement } = canvasStateRef.current;
-        const overlap = canvasStateRef.current.elements.find(
-          (elem) =>
-            cursorPos.x > elem.position.x - EDGE_HIT_AREA &&
-            cursorPos.x <
-              elem.position.x +
-                EDGE_HIT_AREA +
-                (elem.width - elem.crop.right - elem.crop.left) *
-                  elem.scale.x &&
-            cursorPos.y > elem.position.y - EDGE_HIT_AREA &&
-            cursorPos.y <
-              elem.position.y +
-                EDGE_HIT_AREA +
-                (elem.height - elem.crop.top - elem.crop.bottom) * elem.scale.y
-        );
+        let overlapPol: SAT.Polygon = new SAT.Polygon();
+        const overlap = canvasStateRef.current.elements.find((elem) => {
+          const rectPath = [
+            new SAT.Vector(-EDGE_HIT_AREA, -EDGE_HIT_AREA),
+            new SAT.Vector(
+              (elem.width - elem.crop.left - elem.crop.right) * elem.scale.x +
+                EDGE_HIT_AREA * 2,
+              -EDGE_HIT_AREA
+            ),
+            new SAT.Vector(
+              (elem.width - elem.crop.left - elem.crop.right) * elem.scale.x +
+                EDGE_HIT_AREA * 2,
+              (elem.height - elem.crop.top - elem.crop.bottom) * elem.scale.y +
+                EDGE_HIT_AREA * 2
+            ),
+            new SAT.Vector(
+              -EDGE_HIT_AREA,
+              (elem.height - elem.crop.top - elem.crop.bottom) * elem.scale.y +
+                EDGE_HIT_AREA * 2
+            ),
+          ];
+          overlapPol = new SAT.Polygon(
+            new SAT.Vector(elem.position.x, elem.position.y),
+            rectPath
+          ).rotate((elem.rotation * Math.PI) / 180);
+
+          return SAT.pointInPolygon(
+            new SAT.Vector(cursorPos.x, cursorPos.y),
+            overlapPol
+          );
+        });
         if (selectedElement && overlap?.id === selectedElement.id) {
           let selectedEdge = 0;
           if (
@@ -415,7 +431,7 @@ const ElementsTransformer: FC<ElementsTransformerProps> = ({
           selectedElement.scale = transformValues.scale;
         if (transformValues.position)
           selectedElement.position = transformValues.position;
-        if (transformValues.rotation)
+        if (typeof transformValues.rotation === 'number')
           selectedElement.rotation = transformValues.rotation;
         renderCanvas();
         mutex.current.runExclusive(() =>
@@ -589,6 +605,7 @@ const ElementsTransformer: FC<ElementsTransformerProps> = ({
         </Dropdown>
         <Dropdown
           trigger={['click']}
+          className="mr-1"
           overlay={
             <Menu>
               <Menu.Item
@@ -672,6 +689,50 @@ const ElementsTransformer: FC<ElementsTransformerProps> = ({
         >
           <Button>
             Align
+            <DownOutlined />
+          </Button>
+        </Dropdown>
+        <Dropdown
+          trigger={['click']}
+          overlay={
+            <Menu>
+              <Menu.Item
+                onClick={() => {
+                  const { selectedElement } = canvasStateRef.current;
+                  if (!selectedElement) return;
+                  const newRotation = selectedElement.rotation + 90;
+                  broadcaster.scene.transformItem(
+                    undefined,
+                    selectedElement.id,
+                    {
+                      rotation: newRotation > 360 ? 90 : newRotation,
+                    }
+                  );
+                }}
+              >
+                Rotate 90deg right
+              </Menu.Item>
+              <Menu.Item
+                onClick={() => {
+                  const { selectedElement } = canvasStateRef.current;
+                  if (!selectedElement) return;
+                  const newRotation = selectedElement.rotation - 90;
+                  broadcaster.scene.transformItem(
+                    undefined,
+                    selectedElement.id,
+                    {
+                      rotation: newRotation < 0 ? 270 : newRotation,
+                    }
+                  );
+                }}
+              >
+                Rotate 90deg left
+              </Menu.Item>
+            </Menu>
+          }
+        >
+          <Button>
+            Rotate
             <DownOutlined />
           </Button>
         </Dropdown>

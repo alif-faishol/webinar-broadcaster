@@ -24,7 +24,7 @@ export default function App() {
     ipcRenderer.on('maximized-change', onMaximizedChange);
 
     return () => {
-      ipcRenderer.off('maximized-change', onMaximizedChange);
+      ipcRenderer.removeListener('maximized-change', onMaximizedChange);
     };
   }, []);
   return (

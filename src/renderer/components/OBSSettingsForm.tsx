@@ -10,7 +10,13 @@ type OBSSettingsFormProps = {
   allowedSettingsId?: string[];
 };
 
-const OBS_QUICK_SETTINGS = ['url', 'monitor', 'video_device_id', 'window'];
+const OBS_QUICK_SETTINGS = [
+  'url',
+  'monitor',
+  'video_device_id',
+  'window',
+  'file',
+];
 
 const broadcaster = BroadcasterService.getIpcRendererClient();
 
@@ -103,6 +109,22 @@ const OBSSettingsForm: FC<OBSSettingsFormProps> = ({
                 className={i === arr.length - 1 ? 'mb-0' : undefined}
               >
                 <Input addonBefore={item.description} type="text" />
+              </Form.Item>
+            );
+          if (item.type === 5)
+            return (
+              <Form.Item
+                name={item.name}
+                key={item.name}
+                className={i === arr.length - 1 ? 'mb-0' : undefined}
+                valuePropName="fileList"
+                getValueFromEvent={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!(file instanceof File)) return undefined;
+                  return file.path;
+                }}
+              >
+                <Input addonBefore={item.description} type="file" />
               </Form.Item>
             );
           if (item.type === 6 && Array.isArray(item.details?.items))

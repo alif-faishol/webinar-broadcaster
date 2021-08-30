@@ -18,7 +18,6 @@ import {
 } from '@ant-design/icons';
 import useAsync from '@alifaishol/use-async';
 import { Mutex } from 'async-mutex';
-import { RefSelectProps } from 'antd/lib/select';
 import BroadcasterService from '../../services/broadcaster';
 import {
   CustomItem,
@@ -37,13 +36,20 @@ import useBroadcasterState from '../hooks/useBroadcasterState';
 
 const broadcaster = BroadcasterService.getIpcRendererClient();
 
+const OBS_SOURCES: { [key: string]: string } = {
+  window_capture: 'Window Capture',
+  dshow_input: 'Webcam',
+  monitor_capture: 'Desktop Capture',
+  image_source: 'Image',
+  ffmpeg_source: 'Media',
+};
+
 const ModalContent: FC<{
   onCancel?: () => void;
 }> = ({ onCancel }) => {
   const broadcasterState = useBroadcasterState();
   const [name, setName] = useState('');
   const mutexRef = useRef(new Mutex());
-  const customElementSelectRef = useRef<RefSelectProps>(null);
   const [obsPreviewSourceId, setObsPreviewSourceId] = useState<string>();
   const [customElementPreview, setCustomElementPreview] =
     useState<CustomItem>();
@@ -139,7 +145,7 @@ const ModalContent: FC<{
     <div className="flex h-96">
       <div className="w-80 mr-4 overflow-auto">
         <label className="block mb-4">
-          <div className="pb-2">Custom Element</div>
+          <div className="pb-2">Element</div>
           <Select
             loading={loadTemplatesState.loading}
             showSearch
@@ -167,7 +173,7 @@ const ModalContent: FC<{
             ))}
           </Select>
         </label>
-        <div className="flex">
+        <div className="flex mb-4">
           <Button
             type="primary"
             className="flex-1 mr-2"
@@ -249,6 +255,45 @@ const ModalContent: FC<{
             </Button>
           </Dropdown>
         </div>
+        <label className="block">
+          <div className="pb-2">OBS Source</div>
+          <Select
+            showSearch
+            value=""
+            className="w-full"
+            placeholder="Search Element..."
+            onSelect={(obsSourceType: string) => {
+              mutexRef.current.runExclusive(() => {
+                setSelectedTemplate((ps) => {
+                  if (
+                    ps?.type === 'obs-source' &&
+                    ps.obsSourceType === 'window_capture'
+                  ) {
+                    return undefined;
+                  }
+                  return {
+                    type: 'obs-source',
+                    obsSourceType,
+                    name: OBS_SOURCES[obsSourceType],
+                  };
+                });
+              });
+            }}
+            filterOption={(input, option) =>
+              option?.children?.toLowerCase().indexOf(input.toLowerCase()) >= 0
+            }
+          >
+            <Select.Option value="" disabled>
+              Search...
+            </Select.Option>
+            {Object.entries(OBS_SOURCES).map(([obsSourceType, defaultName]) => (
+              // eslint-disable-next-line react/no-array-index-key
+              <Select.Option key={obsSourceType} value={obsSourceType}>
+                {defaultName}
+              </Select.Option>
+            ))}
+          </Select>
+        </label>
         <Divider />
         {/* eslint-disable-next-line no-nested-ternary */}
         {obsPreviewSourceId ? (

@@ -1,6 +1,7 @@
 import React, { FC, useRef, useEffect } from 'react';
 import electron from 'electron';
 import { message } from 'antd';
+import { Mutex } from 'async-mutex';
 import BroadcasterService from '../../services/broadcaster';
 
 type VolmeterBarProps = { width?: number; sourceId: string };
@@ -9,6 +10,7 @@ const broadcaster = BroadcasterService.getIpcRendererClient();
 
 const VolmeterBar: FC<VolmeterBarProps> = ({ sourceId, width = 244 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mutexRef = useRef(new Mutex());
 
   useEffect(() => {
     const ctx = canvasRef.current?.getContext('2d');
@@ -50,20 +52,24 @@ const VolmeterBar: FC<VolmeterBarProps> = ({ sourceId, width = 244 }) => {
       });
     };
 
-    clearCanvas();
+    const mutex = mutexRef.current;
 
-    broadcaster.audio
-      .getVolmeterIpcChannel(sourceId)
-      .then((cid) => {
-        channelId = cid;
+    mutex
+      .runExclusive(async () => {
+        clearCanvas();
+        channelId = await broadcaster.audio.getVolmeterIpcChannel(sourceId);
+
         electron.ipcRenderer.on(channelId, onVolmeterUpdate);
-        return undefined;
       })
       .catch((err) => message.error(err.message));
+
     return () => {
-      if (rafId) window.cancelAnimationFrame(rafId);
-      if (channelId) electron.ipcRenderer.off(channelId, onVolmeterUpdate);
-      broadcaster.audio.unsubscribeVolmeter(sourceId);
+      mutex.runExclusive(() => {
+        if (rafId) window.cancelAnimationFrame(rafId);
+        if (channelId)
+          electron.ipcRenderer.removeListener(channelId, onVolmeterUpdate);
+        broadcaster.audio.unsubscribeVolmeter(sourceId);
+      });
     };
   }, [sourceId]);
 

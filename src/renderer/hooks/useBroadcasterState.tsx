@@ -17,7 +17,7 @@ const BroadcasterStateContext = createContext<
 
 export const BroadcasterStateProvider: FC = ({ children }) => {
   const [broadcasterState, setBroadcasterState] =
-    useState<BroadcasterServiceState>({ scenes: [] });
+    useState<BroadcasterServiceState>({ scenes: [], streaming: false });
 
   useEffect(() => {
     const unsubscribe = broadcaster.subscribe(setBroadcasterState);
