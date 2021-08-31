@@ -9,6 +9,7 @@ import {
   Button,
   Empty,
 } from 'antd';
+import { QuestionOutlined } from '@ant-design/icons';
 import ElementsSidebar from '../components/ElementsSidebar';
 import BroadcasterService from '../../services/broadcaster';
 import useBroadcasterState from '../hooks/useBroadcasterState';
@@ -41,6 +42,15 @@ const MainScreen = () => {
                 </Typography.Title>
               </div>
             ),
+            right: broadcasterState.activeScene ? (
+              <Button
+                icon={<QuestionOutlined />}
+                size="small"
+                onClick={() => setSetupWizardModalOpen(true)}
+              >
+                Open Guide
+              </Button>
+            ) : undefined,
           }}
           activeKey={broadcasterState.activeScene?.id}
           onChange={broadcaster.scene.activate}
