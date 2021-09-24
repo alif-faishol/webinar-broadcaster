@@ -1,0 +1,26 @@
+{
+  "templateId": "74938285-5b96-41cc-b426-e667099f513b",
+  "name": "Running text",
+  "author": "Alif Faishol",
+  "version": "0.1.0",
+  "container": {
+    "configurable": false,
+    "width": 1920,
+    "height": 50
+  },
+  "defaultAlignment": "bottom-left",
+  "variables": {
+    "text": {
+      "label": "Text",
+      "type": "string",
+      "value": "",
+      "visibility": "normal"
+    },
+    "show": {
+      "label": "Show",
+      "type": "boolean",
+      "value": true,
+      "visibility": "normal"
+    }
+  }
+}

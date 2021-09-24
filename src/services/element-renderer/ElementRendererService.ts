@@ -35,9 +35,10 @@ class ElementRendererService {
     app.use('/assets', express.static(RESOURCES_PATH));
     app.get('/', (req, res) => {
       if (process.env.NODE_ENV === 'development') {
-        const elementRendererPort = process.env.ELEMENT_RENDERER_PORT || 1213;
+        const elementRendererDevPort =
+          process.env.ELEMENT_RENDERER_PORT || 1213;
         createProxyServer({
-          target: `http://localhost:${elementRendererPort}/dist/element-renderer.dev.html`,
+          target: `http://localhost:${elementRendererDevPort}/dist/element-renderer.dev.html`,
         }).web(req, res);
       } else {
         res.render(`${__dirname}/dist/element-renderer.prod.html`);
@@ -54,6 +55,15 @@ class ElementRendererService {
     this.io.on('connect', () => {
       this.handleStateChange(observableState.getValue());
     });
+
+    if (process.env.NODE_ENV === 'development') {
+      electron.shell.openExternal(`http://localhost:${port}?dev=true`);
+      this.io.on('connect', async () => {
+        const { templates } =
+          await BroadcasterService.getInstance().element.loadTemplates();
+        this.io.emit('templates-updated', templates);
+      });
+    }
 
     this.server.listen(port);
     console.log('ELEMENT RENDERER PORT:', port);

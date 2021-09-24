@@ -1,23 +1,57 @@
-@import url('https://fonts.googleapis.com/css2?family=Mate+SC&display=swap');
-
 .root {
   width: 100%;
   height: 100%;
 }
 
 .title-container {
-  padding-top: 16px;
-  padding-bottom: 16px;
+  height: 104px;
+  box-sizing: border-box;
+  overflow: hidden;
   padding-left: 12px;
   padding-right: 12px;
   background-color: white;
   font-size: 48px;
   color: black;
-  width: 100%;
-  font-family: 'Mate SC', sans-serif;
+  font-weight: bold;
+  width: auto;
+  font-family: 'Noto Sans', sans-serif;
+  transition: transform 0.5s;
+  display: flex;
+  align-items: center;
+  transform: translateX(-100%);
 }
+
+.title-container.visible {
+  transform: translateX(0);
+}
+
+.subtitle-container {
+  height: 0;
+  opacity: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  padding-left: 12px;
+  padding-right: 12px;
+  background-color: #1890ff;
+  font-size: 36px;
+  color: white;
+  width: auto;
+  font-family: 'Noto Sans', sans-serif;
+  transition: height 0.5s;
+  display: flex;
+  align-items: center;
+}
+
+.subtitle-container.visible {
+  opacity: 1;
+  height: 52px;
+  transition: height 0.5s 0.5s, opacity 0.1s;
+}
+
+/* .title-container.hidden {
+  animation: title 0.5s ease 0s 1 reverse;
+}  */
 
 .big-text {
   font-size: 24px;
-  color: red;
 }

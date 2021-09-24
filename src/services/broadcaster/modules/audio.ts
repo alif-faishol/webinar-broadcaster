@@ -1,7 +1,6 @@
 import * as osn from 'obs-studio-node';
 import { BehaviorSubject } from 'rxjs';
 import { v4 as uuid } from 'uuid';
-import electron from 'electron';
 import type { BroadcasterServiceState } from '..';
 import BroadcasterServiceModule from './BroadcasterServiceModule';
 
@@ -36,7 +35,12 @@ class AudioModule extends BroadcasterServiceModule {
     try {
       const sceneItems = obsScene.getItems();
       return sceneItems
-        .filter((sceneItem) => sceneItem.source.outputFlags & 2)
+        .filter(
+          (sceneItem) =>
+            sceneItem.source.outputFlags & 2 &&
+            // ignore element-renderer
+            !sceneItem.source.name.startsWith('renderer')
+        )
         .map((sceneItem) => sceneItem.source.name);
     } catch (err) {
       throw Error(err.message);

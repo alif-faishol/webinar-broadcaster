@@ -1,4 +1,10 @@
 import {
+  PlayCircleOutlined,
+  PlusOutlined,
+  QuestionOutlined,
+  SettingOutlined,
+} from '@ant-design/icons';
+import {
   ModalProps,
   Modal,
   Steps,
@@ -12,15 +18,53 @@ import { atom, useAtom } from 'jotai';
 import React, { FC, useEffect } from 'react';
 
 const guideMessageMap: Array<
-  Array<{ message: string; placement: NotificationPlacement }>
+  Array<{ message: React.ReactNode; placement: NotificationPlacement }>
 > = [
   [
-    { message: 'Click the "Create New Scene" button', placement: 'topRight' },
-    { message: 'Type the name for the scene', placement: 'topRight' },
+    {
+      message: (
+        <Typography.Paragraph>
+          Click the
+          <Button className="mx-1" size="small">
+            Create New Scene
+          </Button>
+          button or
+          <Button className="mx-1" size="small">
+            +
+          </Button>
+          button next to SCENES label
+        </Typography.Paragraph>
+      ),
+      placement: 'topRight',
+    },
+    {
+      message: (
+        <Typography.Paragraph>
+          Type the name for the scene and click
+          <Button type="primary" className="mx-1" size="small">
+            Submit
+          </Button>
+        </Typography.Paragraph>
+      ),
+      placement: 'topRight',
+    },
   ],
   [
     {
-      message: 'Click the "+ Add" button next to ELEMENTS label',
+      message: (
+        <Typography.Paragraph>
+          Click the
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            className="mx-1"
+            size="small"
+          >
+            Add
+          </Button>
+          button next to ELEMENTS label
+        </Typography.Paragraph>
+      ),
       placement: 'topLeft',
     },
     {
@@ -29,7 +73,15 @@ const guideMessageMap: Array<
       placement: 'topRight',
     },
     {
-      message: 'Click "Add" when you ready to add the element',
+      message: (
+        <Typography.Paragraph>
+          Click
+          <Button type="primary" className="mx-1" size="small">
+            Add
+          </Button>
+          when you ready to add the element
+        </Typography.Paragraph>
+      ),
       placement: 'topRight',
     },
     {
@@ -40,8 +92,30 @@ const guideMessageMap: Array<
   ],
   [
     {
-      message:
-        'Click the "Gear" button next to "Start Streaming" button. And then "get it here" to redirect you to your YouTube streaming console. Copy your stream key from YouTube and paste it in this "Stream key" field',
+      message: (
+        <Typography.Paragraph>
+          Click the
+          <Button
+            icon={<SettingOutlined />}
+            shape="circle"
+            size="small"
+            className="mx-1"
+          />
+          button next to
+          <Button
+            type="primary"
+            size="small"
+            shape="round"
+            icon={<PlayCircleOutlined />}
+            className="mx-1"
+          >
+            Start Streaming
+          </Button>
+          button. And then click "<Typography.Link>get it here</Typography.Link>
+          " to redirect you to your YouTube streaming console. Copy your stream
+          key from YouTube and paste it in the "Stream key" field
+        </Typography.Paragraph>
+      ),
       placement: 'topRight',
     },
   ],
@@ -207,7 +281,7 @@ const SetupWizardModal: FC<ModalProps & { onCancel: () => void }> = ({
                 setState((ps) => ({ ...ps, minimized: true }));
               }}
             >
-              Setup
+              Setup YouTube
             </Button>
           </>
         )}
@@ -216,6 +290,13 @@ const SetupWizardModal: FC<ModalProps & { onCancel: () => void }> = ({
             <Typography.Paragraph>
               If everything setup correctly, you can start your webinar stream
               by clicking Start Streaming.
+            </Typography.Paragraph>
+            <Typography.Paragraph>
+              You can reopen this guide by clicking
+              <Button className="mx-1" icon={<QuestionOutlined />} size="small">
+                Open Guide
+              </Button>
+              button if need be.
             </Typography.Paragraph>
             <Button
               type="primary"
